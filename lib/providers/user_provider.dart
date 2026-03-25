@@ -21,7 +21,7 @@ class UserProvider extends ChangeNotifier {
   bool get isAuthLoading => _isAuthLoading;
 
   UserProvider() {
-    _currentUser = HiveService.instance.currentUser!;
+    _currentUser = HiveService.instance.currentUser;
 
     _auth.authStateChanges().listen((User? user) {
       if (user != null){

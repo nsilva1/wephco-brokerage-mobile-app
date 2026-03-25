@@ -13,12 +13,18 @@ import 'package:wephco_brokerage/models/wallet.dart';
 
 // Providers
 import './providers/user_provider.dart';
+import './providers/property_provider.dart';
 
 // Services
 import 'package:wephco_brokerage/services/hive_service.dart';
 
 // Config
 import 'firebase_options.dart';
+
+// Screens
+import 'package:wephco_brokerage/screens/splash_screen.dart';
+import 'package:wephco_brokerage/screens/auth/login.dart';
+import 'package:wephco_brokerage/screens/auth/register.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,7 +49,8 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => UserProvider(),)
+        ChangeNotifierProvider(create: (_) => UserProvider(),),
+        ChangeNotifierProvider(create: (_) => PropertyProvider())
       ],
       child: const MyApp()
     )
@@ -60,11 +67,14 @@ class MyApp extends StatelessWidget {
       title: 'Wephco Brokerage',
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        // colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: Scaffold(
-        body: Center(child: Text('Wephco Brokerage'),),
-      )
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const SplashScreen(),
+        '/login': (context) => const LoginScreen(),
+        '/register': (context) => const RegisterScreen()
+      },
     );
   }
 }
