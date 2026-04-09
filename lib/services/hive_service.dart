@@ -24,7 +24,7 @@ class HiveService {
 
   // Initialize everything
   Future<void> init() async {
-    await Hive.initFlutter();
+    // await Hive.initFlutter();
 
     // open all boxes
     userBox = await Hive.openBox<UserInfo>('userBox');
@@ -45,10 +45,18 @@ class HiveService {
     await propertyBox.putAll(map);
   }
 
+  Future<void> saveAllLeads(List<Lead> leads) async {
+    final map = {for (var l in leads) l.id! : l};
+    await leadBox.putAll(map);
+  }
+
   List<Property> get allCachedProperties => propertyBox.values.toList();
+
+  List<Lead> get allCachedLeads => leadBox.values.toList();
 
   Future<void> clearAll() async {
     await userBox.clear();
     await propertyBox.clear();
+    await leadBox.clear();
   }
 }

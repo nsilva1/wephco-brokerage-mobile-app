@@ -86,7 +86,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   
                   Align(
                     alignment: Alignment.centerRight,
-                    child: TextButton(onPressed: () {}, child: const Text("Forgot Password?")),
+                    child: TextButton(onPressed: () {}, child: const Text("Forgot Password?", style: TextStyle(
+      decoration: TextDecoration.underline, // This adds the underline
+      color: Color(0xFF235F23), // Keeping your brand green
+      fontWeight: FontWeight.bold,
+    ),)),
                   ),
                   
                   const SizedBox(height: 30),
@@ -109,7 +113,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       const Text("Don't have an account?"),
                       TextButton(
                         onPressed: () => Navigator.pushNamed(context, '/register'), 
-                        child: const Text("Register"),
+                        child: const Text("Register", style: TextStyle(
+      decoration: TextDecoration.underline, // This adds the underline
+      color: Color(0xFF235F23), // Keeping your brand green
+      fontWeight: FontWeight.bold,
+    ),),
                       ),
                     ],
                   )

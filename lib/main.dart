@@ -14,6 +14,7 @@ import 'package:wephco_brokerage/models/wallet.dart';
 // Providers
 import './providers/user_provider.dart';
 import './providers/property_provider.dart';
+import './providers/leads_provider.dart';
 
 // Services
 import 'package:wephco_brokerage/services/hive_service.dart';
@@ -25,12 +26,13 @@ import 'firebase_options.dart';
 import 'package:wephco_brokerage/screens/splash_screen.dart';
 import 'package:wephco_brokerage/screens/auth/login.dart';
 import 'package:wephco_brokerage/screens/auth/register.dart';
+import 'package:wephco_brokerage/screens/main_layout.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialise Hive instance
-  await HiveService.instance.init();
+  await Hive.initFlutter();
+
 
   // Register Adapters
   Hive.registerAdapter(LeadAdapter());
@@ -38,6 +40,9 @@ void main() async {
   Hive.registerAdapter(TransactionAdapter());
   Hive.registerAdapter(UserInfoAdapter());
   Hive.registerAdapter(WalletInfoAdapter());
+
+  // Initialise Hive instance
+  await HiveService.instance.init();
 
   // Initialise Firebase
   await Firebase.initializeApp(
@@ -50,7 +55,8 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider(),),
-        ChangeNotifierProvider(create: (_) => PropertyProvider())
+        ChangeNotifierProvider(create: (_) => PropertyProvider()),
+        ChangeNotifierProvider(create: (_) => LeadProvider()),
       ],
       child: const MyApp()
     )
@@ -73,7 +79,8 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
-        '/register': (context) => const RegisterScreen()
+        '/register': (context) => const RegisterScreen(),
+        '/home': (context) => const MainLayout(),
       },
     );
   }
