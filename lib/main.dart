@@ -73,7 +73,11 @@ class MyApp extends StatelessWidget {
       title: 'Wephco Brokerage',
       theme: ThemeData(
         useMaterial3: true,
-        // colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: .fromSeed(
+          seedColor: const Color(0xFF235F23),
+          primary: const Color(0xFF235F23),
+          secondary: const Color(0xFF775A19)
+        ),
       ),
       initialRoute: '/',
       routes: {
@@ -81,6 +85,9 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/home': (context) => const MainLayout(),
+        '/leads': (context) => const MainLayout(initialIndex: 1,),
+        '/properties': (context) => const MainLayout(initialIndex: 2,),
+        '/wallet': (context) => const MainLayout(initialIndex: 3,),
       },
     );
   }

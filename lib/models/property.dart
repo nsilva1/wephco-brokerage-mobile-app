@@ -23,7 +23,9 @@ class Property extends HiveObject {
   @HiveField(8)
   final String image;
   @HiveField(9)
-  final String? createdAt;
+  final DateTime? createdAt;
+  @HiveField(10)
+  final String currency;
 
   Property({
     this.id,
@@ -36,6 +38,7 @@ class Property extends HiveObject {
     required this.description,
     required this.image,
     this.createdAt,
+    required this.currency,
   });
 
   factory Property.fromMap(Map<String, dynamic> map, [String? docId]) {
@@ -50,6 +53,7 @@ class Property extends HiveObject {
       description: map['description'] ?? '',
       image: map['image'] ?? '',
       createdAt: map['createdAt'],
+      currency: map['currency'] ?? '',
     );
   }
 }

@@ -67,6 +67,10 @@
 			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
 		<key>UIStatusBarHidden</key>
+		<key>LSApplicationQueriesSchemes</key>
+		<array>
+  			<string>mailto</string>
+		</array>
 		<false/>
 	</dict>
 </plist>

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import '../services/hive_service.dart';
 import '../models/property.dart';
+import '../data/mock_data.dart';
 
 class PropertyProvider extends ChangeNotifier {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -17,10 +18,11 @@ class PropertyProvider extends ChangeNotifier {
 
   PropertyProvider() {
     // 1. Load from Hive immediately so the screen isn't empty
-    _properties = HiveService.instance.allCachedProperties;
+    // _properties = HiveService.instance.allCachedProperties;
+    _properties = MockData.fakeProperties;
     
     // 2. Fetch fresh data from Firestore
-    fetchProperties();
+    // fetchProperties();
   }
 
   Future<void> fetchProperties() async {
@@ -65,6 +67,16 @@ class PropertyProvider extends ChangeNotifier {
       return title.contains(query) || location.contains(query);
     }).toList();
   }
+
+  // Returns a property by its ID from the currently loaded list
+Property? getPropertyById(String id) {
+  try {
+    return _properties.firstWhere((property) => property.id == id);
+  } catch (e) {
+    // Returns null if no property matches the ID
+    return null; 
+  }
+}
 
   void updateSearch(String query) {
     _searchQuery = query;

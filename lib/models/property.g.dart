@@ -26,7 +26,8 @@ class PropertyAdapter extends TypeAdapter<Property> {
       status: fields[6] as String,
       description: fields[7] as String,
       image: fields[8] as String,
-      createdAt: fields[9] as String?,
+      createdAt: fields[9] as DateTime?,
+      currency: fields[10] as String,
     );
   }
 
@@ -53,7 +54,9 @@ class PropertyAdapter extends TypeAdapter<Property> {
       ..writeByte(8)
       ..write(obj.image)
       ..writeByte(9)
-      ..write(obj.createdAt);
+      ..write(obj.createdAt)
+      ..writeByte(10)
+      ..write(obj.currency);
   }
 
   @override

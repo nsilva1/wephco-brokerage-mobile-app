@@ -26,7 +26,8 @@ class LeadAdapter extends TypeAdapter<Lead> {
       budget: fields[6] as double?,
       source: fields[7] as String,
       status: fields[8] as String,
-      createdAt: fields[9] as String?,
+      createdAt: fields[9] as DateTime,
+      currency: fields[10] as String,
     );
   }
 
@@ -53,7 +54,9 @@ class LeadAdapter extends TypeAdapter<Lead> {
       ..writeByte(8)
       ..write(obj.status)
       ..writeByte(9)
-      ..write(obj.createdAt);
+      ..write(obj.createdAt)
+      ..writeByte(10)
+      ..write(obj.currency);
   }
 
   @override

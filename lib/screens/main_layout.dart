@@ -2,21 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wephco_brokerage/providers/user_provider.dart';
 import 'package:wephco_brokerage/screens/dashboard.dart';
+import 'package:wephco_brokerage/screens/leads/leads.dart';
 
 class MainLayout extends StatefulWidget {
-  const MainLayout({super.key});
+  final int initialIndex;
+
+  const MainLayout({super.key, this.initialIndex = 0});
 
   @override
   State<MainLayout> createState() => _MainLayoutState();
 }
 
 class _MainLayoutState extends State<MainLayout> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize the index based on what was passed to the widget
+    _selectedIndex = widget.initialIndex;
+  }
 
   // 1. Define your pages here
   final List<Widget> _pages = [
-    const Dashboard(),
-    const Center(child: Text("Leads Page", style: TextStyle(fontSize: 24))),
+    const HomeScreen(),
+    const LeadsScreen(),
     const Center(child: Text("Properties Page", style: TextStyle(fontSize: 24))),
     const Center(child: Text("Wallet Page", style: TextStyle(fontSize: 24))),
   ];

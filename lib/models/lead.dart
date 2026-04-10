@@ -23,7 +23,9 @@ class Lead extends HiveObject {
   @HiveField(8)
   final String status;
   @HiveField(9)
-  final String? createdAt;
+  final DateTime createdAt;
+  @HiveField(10)
+  final String currency;
 
   Lead({
     this.id,
@@ -35,7 +37,8 @@ class Lead extends HiveObject {
     this.budget,
     required this.source,
     required this.status,
-    this.createdAt,
+    required this.createdAt,
+    required this.currency,
   });
 
   factory Lead.fromMap(Map<String, dynamic> map, [String? docId]) {
@@ -49,7 +52,23 @@ class Lead extends HiveObject {
       budget: map['budget'] != null ? (map['budget'] as num).toDouble() : null,
       source: map['source'] ?? '',
       status: map['status'] ?? 'New Lead',
-      createdAt: map['createdAt'],
+      createdAt: map['createdAt'] ?? '',
+      currency: map['currency'] ?? '',
     );
   }
+
+  Map<String, dynamic> toMap() {
+  return {
+    'name': name,
+    'email': email,
+    'phone': phone,
+    'userId': userId,
+    'propertyId': propertyId,
+    'budget': budget,
+    'source': source,
+    'status': status,
+    'createdAt': createdAt,
+    'currency' : currency,
+  };
+}
 }
