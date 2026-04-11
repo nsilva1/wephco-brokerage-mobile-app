@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wephco_brokerage/screens/main_layout.dart';
 import '../providers/leads_provider.dart';
 import '../providers/user_provider.dart';
 import '../providers/property_provider.dart';
@@ -249,7 +248,7 @@ class HomeScreen extends StatelessWidget {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: previewLeads.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
           final lead = previewLeads[index];
           return Container(

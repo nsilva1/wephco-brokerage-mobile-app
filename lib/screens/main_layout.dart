@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:wephco_brokerage/providers/user_provider.dart';
 import 'package:wephco_brokerage/screens/dashboard.dart';
 import 'package:wephco_brokerage/screens/leads/leads.dart';
+import 'package:wephco_brokerage/screens/properties/properties.dart';
 
 class MainLayout extends StatefulWidget {
   final int initialIndex;
@@ -27,7 +28,7 @@ class _MainLayoutState extends State<MainLayout> {
   final List<Widget> _pages = [
     const HomeScreen(),
     const LeadsScreen(),
-    const Center(child: Text("Properties Page", style: TextStyle(fontSize: 24))),
+    const PropertiesScreen(),
     const Center(child: Text("Wallet Page", style: TextStyle(fontSize: 24))),
   ];
 
@@ -37,20 +38,48 @@ class _MainLayoutState extends State<MainLayout> {
     });
   }
 
+  // Helper to determine FAB action based on current tab
+  void _handleFabPressed() {
+    switch (_selectedIndex) {
+      case 0: // Dashboard
+      case 1: // Leads
+        Navigator.pushNamed(context, '/leads/new');
+        break;
+      case 2: // Properties
+        Navigator.pushNamed(context, '/properties/new');
+        break;
+      case 3: // Wallet
+        print('Navigating to Withdrawal/Transaction Screen');
+        break;
+    }
+  }
+
+  // Helper to determine FAB icon
+  IconData _getFabIcon() {
+    switch (_selectedIndex) {
+      case 2:
+        return Icons.add_business;
+      case 3:
+        return Icons.add_card;
+      default:
+        return Icons.person_add_alt_1;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = context.read<UserProvider>().currentUser;
 
     return SafeArea(child: Scaffold(
-      // --- The Top Bar ---
       appBar: AppBar(
         title: const Text("Wephco Brokerage"),
-        backgroundColor: const Color(0xFF235F23),
+        backgroundColor: const Color(0xFF064E3B),
         foregroundColor: Colors.white,
       ),
 
       // --- The Side Drawer ---
       drawer: Drawer(
+        backgroundColor: Theme.of(context).colorScheme.primary,
   child: Column( // Use a Column instead of just a ListView
     children: [
       // 1. The Scrollable Area
@@ -59,7 +88,6 @@ class _MainLayoutState extends State<MainLayout> {
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: const BoxDecoration(color: Color(0xFF235F23)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -67,7 +95,7 @@ class _MainLayoutState extends State<MainLayout> {
                   const CircleAvatar(
                     radius: 30,
                     backgroundColor: Colors.white,
-                    child: Icon(Icons.person, color: Color(0xFF235F23)),
+                    child: Icon(Icons.person, color: Color(0xFF064E3B)),
                   ),
                   const SizedBox(height: 10),
                   Text(
@@ -82,11 +110,22 @@ class _MainLayoutState extends State<MainLayout> {
               ),
             ),
             ListTile(
+              iconColor: Theme.of(context).colorScheme.secondary,
+              textColor: Theme.of(context).colorScheme.secondary,
+              leading: const Icon(Icons.edit_document),
+              title: const Text("KYC"),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              iconColor: Theme.of(context).colorScheme.secondary,
+              textColor: Theme.of(context).colorScheme.secondary,
               leading: const Icon(Icons.settings),
               title: const Text("Settings"),
               onTap: () => Navigator.pop(context),
             ),
             ListTile(
+              iconColor: Theme.of(context).colorScheme.secondary,
+              textColor: Theme.of(context).colorScheme.secondary,
               leading: const Icon(Icons.help_outline),
               title: const Text("Support"),
               onTap: () => Navigator.pop(context),
@@ -98,8 +137,8 @@ class _MainLayoutState extends State<MainLayout> {
       // 2. The Permanent Bottom Area
       const Divider(height: 1), // Optional: clean line above logout
       ListTile(
-        leading: const Icon(Icons.logout, color: Colors.red),
-        title: const Text("Logout", style: TextStyle(color: Colors.red)),
+        leading: const Icon(Icons.logout, color: Colors.grey),
+        title: const Text("Logout", style: TextStyle(color: Colors.grey)),
         onTap: () {
           // Trigger your logout logic
           // _handleLogout(context);
@@ -115,12 +154,21 @@ class _MainLayoutState extends State<MainLayout> {
       // --- The Dynamic Body ---
       body: _pages[_selectedIndex],
 
+      // --- Floating Action Button ---
+        floatingActionButton: FloatingActionButton(
+          onPressed: _handleFabPressed,
+          backgroundColor: const Color(0xFF064E3B),
+          foregroundColor: Colors.white,
+          elevation: 4,
+          child: Icon(_getFabIcon()),
+        ),
+
       // --- The Bottom Navigation ---
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed, // Essential for 4+ items
-        selectedItemColor: const Color(0xFF235F23),
+        selectedItemColor: const Color(0xFF064E3B),
         unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: "Dashboard"),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wephco_brokerage/providers/leads_provider.dart';
 import 'package:wephco_brokerage/providers/property_provider.dart';
+import 'package:wephco_brokerage/screens/properties/property_details.dart';
 import '../../utils/helper_functions.dart';
 
 class LeadsScreen extends StatefulWidget {
@@ -52,7 +53,7 @@ class _LeadsScreenState extends State<LeadsScreen> {
             foregroundColor: Colors.white,
           ),
           onPressed: () {
-            // Handle add lead action
+            Navigator.pushNamed(context, '/leads/new');
           },
           icon: const Icon(Icons.add),
           label: const Text("Add Lead"),
@@ -183,7 +184,7 @@ class _LeadsScreenState extends State<LeadsScreen> {
                       ),
                     ],
                   ),
-                  TextButton(onPressed: (){}, child: Text('View Property'))
+                  TextButton(onPressed: property != null ? (){Navigator.push(context, MaterialPageRoute(builder: (context) => PropertyDetails(propertyId: property.id!,)));} : null, child: Text('View Property'))
                 ],
               )
             ],

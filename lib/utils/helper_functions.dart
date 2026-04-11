@@ -48,6 +48,7 @@ String formatCurrency(double amount, {bool compact = false, String currency = 'N
   String symbol = currency == 'USD' ? '\$' : '₦';
 
     if (compact) {
+      if (amount >= 1000000000) return "$symbol${(amount / 1000000000000).toStringAsFixed(1)}T";
       if (amount >= 1000000000) return "$symbol${(amount / 1000000000).toStringAsFixed(1)}B";
       if (amount >= 1000000) return "$symbol${(amount / 1000000).toStringAsFixed(1)}M";
       if (amount >= 1000) return "$symbol${(amount / 1000).toStringAsFixed(1)}k";

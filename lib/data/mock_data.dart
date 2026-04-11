@@ -116,7 +116,7 @@ class MockData {
       description: 'A stunning luxury condo located in the heart of Victoria Island, Lagos. Offers breathtaking views of the Atlantic Ocean, state-of-the-art amenities, and 24/7 security.',
       price: 45000000.0,
       location: 'Victoria Island, Lagos',
-      image: 'https://images.unsplash.com/photo-1560448070-9c8e1bfbf1b4?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      image: 'https://images.unsplash.com/photo-1626882920560-80b382db2bc9?q=80&w=1332&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       status: 'Available',
       createdAt: DateTime.now().subtract(const Duration(days: 45)),
       currency: 'NGN'
@@ -140,7 +140,7 @@ class MockData {
       description: 'A cozy studio apartment located in the bustling Gwarinpa area of Abuja. Ideal for young professionals or students, offering a compact living space with modern amenities.',
       price: 12000000.0,
       location: 'Gwarinpa, Abuja',
-      image: 'https://images.unsplash.com/photo-1560448070-9c8e1bfbf1b4?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      image: 'https://images.unsplash.com/photo-1637288099468-93ae6e3124e7?q=80&w=1172&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       status: 'Available',
       createdAt: DateTime.now().subtract(const Duration(days: 15)),
       currency: 'NGN'

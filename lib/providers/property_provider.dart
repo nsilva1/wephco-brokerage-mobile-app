@@ -70,11 +70,15 @@ class PropertyProvider extends ChangeNotifier {
 
   // Returns a property by its ID from the currently loaded list
 Property? getPropertyById(String id) {
+  _isLoading = true;
+
   try {
     return _properties.firstWhere((property) => property.id == id);
   } catch (e) {
     // Returns null if no property matches the ID
     return null; 
+  } finally {
+    _isLoading = false;
   }
 }
 

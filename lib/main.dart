@@ -10,6 +10,7 @@ import 'package:wephco_brokerage/models/property.dart';
 import 'package:wephco_brokerage/models/transaction.dart';
 import 'package:wephco_brokerage/models/user.dart';
 import 'package:wephco_brokerage/models/wallet.dart';
+import 'package:wephco_brokerage/screens/leads/add_lead.dart';
 
 // Providers
 import './providers/user_provider.dart';
@@ -27,6 +28,7 @@ import 'package:wephco_brokerage/screens/splash_screen.dart';
 import 'package:wephco_brokerage/screens/auth/login.dart';
 import 'package:wephco_brokerage/screens/auth/register.dart';
 import 'package:wephco_brokerage/screens/main_layout.dart';
+import 'package:wephco_brokerage/screens/properties/property_details.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -74,9 +76,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: .fromSeed(
-          seedColor: const Color(0xFF235F23),
-          primary: const Color(0xFF235F23),
-          secondary: const Color(0xFF775A19)
+          seedColor: const Color(0xFF064E3B),
+          primary: const Color(0xFF064E3B),
+          secondary: const Color(0xFFC5A059)
         ),
       ),
       initialRoute: '/',
@@ -88,6 +90,8 @@ class MyApp extends StatelessWidget {
         '/leads': (context) => const MainLayout(initialIndex: 1,),
         '/properties': (context) => const MainLayout(initialIndex: 2,),
         '/wallet': (context) => const MainLayout(initialIndex: 3,),
+        '/properties/detail': (context) => const PropertyDetails(),
+        '/leads/new': (context) => const AddLeadScreen()
       },
     );
   }
