@@ -4,6 +4,7 @@ import 'package:wephco_brokerage/providers/user_provider.dart';
 import 'package:wephco_brokerage/screens/dashboard.dart';
 import 'package:wephco_brokerage/screens/leads/leads.dart';
 import 'package:wephco_brokerage/screens/properties/properties.dart';
+import 'package:wephco_brokerage/screens/wallet/wallet_screen.dart';
 
 class MainLayout extends StatefulWidget {
   final int initialIndex;
@@ -29,7 +30,7 @@ class _MainLayoutState extends State<MainLayout> {
     const HomeScreen(),
     const LeadsScreen(),
     const PropertiesScreen(),
-    const Center(child: Text("Wallet Page", style: TextStyle(fontSize: 24))),
+    const WalletScreen(),
   ];
 
   void _onItemTapped(int index) {

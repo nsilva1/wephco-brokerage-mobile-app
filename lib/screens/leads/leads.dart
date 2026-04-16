@@ -95,7 +95,7 @@ class _LeadsScreenState extends State<LeadsScreen> {
       separatorBuilder: (_, __) => const SizedBox(height: 20),
       itemBuilder: (context, index) {
         final lead = leads[index];
-        final property = propertyProvider.getPropertyById(lead.propertyId);
+        final property = lead.propertyId != null ? propertyProvider.getPropertyById(lead.propertyId!) : null;
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -111,9 +111,9 @@ class _LeadsScreenState extends State<LeadsScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(lead.name, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary)),
+                      Text(lead.name ?? 'Unknown', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary)),
                       const SizedBox(height: 4),
-                      Text(lead.email, style: const TextStyle(color: Colors.grey)),
+                      Text(lead.email ?? '', style: const TextStyle(color: Colors.grey)),
                     ],
                   ),
                   // Text(lead.status, style: TextStyle(
@@ -141,7 +141,7 @@ class _LeadsScreenState extends State<LeadsScreen> {
                     const SizedBox(height: 4),
                     Text('${property?.title}', style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
-                    Text(formatCurrency(lead.budget as double, currency: lead.currency), style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold))
+                    Text(formatCurrency(lead.budget as double, currency: lead.currency ?? ''), style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold))
                   ],
                 ),
                 )
@@ -163,7 +163,7 @@ class _LeadsScreenState extends State<LeadsScreen> {
                 ),
                 child: GestureDetector(
                   onTap: () {
-                    sendEmail(toEmail: lead.email, subject: 'Interest in ${property?.title}', body: 'Hello ${lead.name}');
+                    sendEmail(toEmail: lead.email ?? '', subject: 'Interest in ${property?.title}', body: 'Hello ${lead.name}');
                   },
                   child: Icon(Icons.mail),
                 ),
@@ -177,7 +177,7 @@ class _LeadsScreenState extends State<LeadsScreen> {
                 ),
                 child: GestureDetector(
                   onTap: () {
-                    callPhone(lead.phone);
+                    callPhone(lead.phone ?? '');
                   },
                   child: Icon(Icons.phone),
                 ),

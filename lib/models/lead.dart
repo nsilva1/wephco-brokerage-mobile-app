@@ -7,25 +7,25 @@ class Lead extends HiveObject {
   @HiveField(0)
   final String? id;
   @HiveField(1)
-  final String name;
+  final String? name;
   @HiveField(2)
-  final String email;
+  final String? email;
   @HiveField(3)
-  final String phone;
+  final String? phone;
   @HiveField(4)
-  final String userId;
+  final String?userId;
   @HiveField(5)
-  final String propertyId;
+  final String? propertyId;
   @HiveField(6)
   final double? budget;
   @HiveField(7)
-  final String source;
+  final String? source;
   @HiveField(8)
-  final String status;
+  final String? status;
   @HiveField(9)
-  final DateTime createdAt;
+  final DateTime? createdAt;
   @HiveField(10)
-  final String currency;
+  final String? currency;
 
   Lead({
     this.id,

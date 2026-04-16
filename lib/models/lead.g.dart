@@ -18,16 +18,16 @@ class LeadAdapter extends TypeAdapter<Lead> {
     };
     return Lead(
       id: fields[0] as String?,
-      name: fields[1] as String,
-      email: fields[2] as String,
-      phone: fields[3] as String,
-      userId: fields[4] as String,
-      propertyId: fields[5] as String,
+      name: fields[1] as String?,
+      email: fields[2] as String?,
+      phone: fields[3] as String?,
+      userId: fields[4] as String?,
+      propertyId: fields[5] as String?,
       budget: fields[6] as double?,
-      source: fields[7] as String,
-      status: fields[8] as String,
-      createdAt: fields[9] as DateTime,
-      currency: fields[10] as String,
+      source: fields[7] as String?,
+      status: fields[8] as String?,
+      createdAt: fields[9] as DateTime?,
+      currency: fields[10] as String?,
     );
   }
 

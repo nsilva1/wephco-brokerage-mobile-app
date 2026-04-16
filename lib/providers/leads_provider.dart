@@ -115,7 +115,7 @@ class LeadProvider extends ChangeNotifier {
       List<Lead> userLeads = allLeads.where((lead) => lead.userId == userId).toList();
 
       // Sort in memory: Newest first
-      userLeads.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      userLeads.sort((a, b) => (b.createdAt ?? DateTime.now()).compareTo(a.createdAt ?? DateTime.now()));
 
       // 3. Update Local Cache (Hive)
       await HiveService.instance.saveAllLeads(userLeads);
@@ -138,8 +138,8 @@ class LeadProvider extends ChangeNotifier {
     
     final query = _searchQuery.toLowerCase();
     return _leads.where((l) {
-      final name = l.name.toLowerCase();
-      final email = l.email.toLowerCase();
+      final name = (l.name ?? '').toLowerCase();
+      final email = (l.email ?? '').toLowerCase();
       return name.contains(query) || email.contains(query);
     }).toList();
   }
