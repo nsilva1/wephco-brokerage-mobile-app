@@ -59,7 +59,7 @@ class _PropertiesScreenState extends State<PropertiesScreen> {
   Widget _propertiesListView(List<Property> properties) {
 
     if (properties.isEmpty) {
-      return const Center(child: Text("No leads found. Try adjusting your search or add new leads."));
+      return const Center(child: Text("No properties found."));
     }
 
     return ListView.separated(

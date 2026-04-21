@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:wephco_brokerage/models/transaction.dart';
 import '../../providers/user_provider.dart';
 import '../../utils/helper_functions.dart';
+// import '../../data/mock_data.dart';
 
 class WalletScreen extends StatelessWidget {
   const WalletScreen({super.key});
@@ -17,11 +18,11 @@ class WalletScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
             _buildBalanceCard(context),
             const SizedBox(height: 30),
-            _buildQuickActions(),
-            const SizedBox(height: 32),
+            _buildQuickActions(context),
+            const SizedBox(height: 30),
             _buildTransactionHeader(context),
             _buildTransactionList(context),
           ],
@@ -117,59 +118,36 @@ class WalletScreen extends StatelessWidget {
     );
   }
 
-  Widget _cardSubStat(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(color: Colors.white60, fontSize: 10, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuickActions() {
+  Widget _buildQuickActions(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _actionItem(icon: Icons.south_west_rounded, label: "Withdraw", color: const Color(0xFF003527), onTap: (){}),
-          _actionItem(icon: Icons.sync_alt_rounded, label: "Transfer", color: const Color(0xFF775A19), onTap: (){}),
-          // _actionItem(Icons.description_outlined, "Statement", Colors.grey.shade700),
-        ],
-      ),
+      child: _actionItems(context)
     );
   }
 
-  Widget _actionItem({
-  required IconData icon,
-  required String label,
-  required Color color,
-  required VoidCallback onTap,
-}) {
-  return Expanded(
+  Widget _actionItems(BuildContext context) {
+  return Padding(
+    padding: EdgeInsetsGeometry.all(8),
+    child: Row(
+      spacing: 15.0,
+      children: [
+        Expanded(
     child: SizedBox(
     height: 50,
     child: ElevatedButton.icon(
-    onPressed: onTap,
-    icon: Icon(icon, color: color, size: 22),
+    onPressed: (){},
+    icon: Icon(Icons.south_west_rounded, color: Colors.white, size: 22),
     label: Text(
-      label,
-      style: const TextStyle(
+      "Withdraw",
+      style: TextStyle(
         fontWeight: FontWeight.bold,
         fontSize: 14,
         letterSpacing: 0.3,
+        color: Colors.white
       ),
     ),
     style: ElevatedButton.styleFrom(
-      backgroundColor: color,
+      backgroundColor: Theme.of(context).colorScheme.primary,
       foregroundColor: const Color(0xFF404944), // TextVariant color
       elevation: 0,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
@@ -183,6 +161,41 @@ class WalletScreen extends StatelessWidget {
     ),
   ),
   ),
+  ),
+
+  Expanded(
+    child: SizedBox(
+    height: 50,
+    child: ElevatedButton.icon(
+    onPressed: () {},
+    icon: Icon(Icons.sync_alt_rounded, color: Theme.of(context).colorScheme.primary, size: 22),
+    label: Text(
+      'Transfer',
+      style: TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 14,
+        letterSpacing: 0.3,
+        color: Theme.of(context).colorScheme.primary
+      ),
+    ),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.white,
+      foregroundColor: const Color(0xFF404944), // TextVariant color
+      elevation: 0,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: Colors.grey.withValues(alpha: 0.1),
+          width: 1.5,
+        ),
+      ),
+    ),
+  ),
+  ),
+  )
+      ],
+    ),
   );
 }
 
@@ -197,7 +210,7 @@ class WalletScreen extends StatelessWidget {
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFF003527)),
           ),
           TextButton(
-            onPressed: () {},
+            onPressed: () { Navigator.pushNamed(context, '/wallet/transactions'); },
             child: const Text("See Transaction History", style: TextStyle(color: Color(0xFF235F23), fontWeight: FontWeight.bold)),
           ),
         ],
@@ -206,17 +219,12 @@ class WalletScreen extends StatelessWidget {
   }
 
   Widget _buildTransactionList(BuildContext context) {
-    // final transactions = [
-    //   {'title': 'Commission: Azure Towers', 'date': 'Today, 11:42 AM', 'amount': 450000.0, 'isCredit': true},
-    //   {'title': 'Bank Payout', 'date': 'Oct 02, 2023', 'amount': -200000.0, 'isCredit': false},
-    //   {'title': 'Commission: Oakwood Estate', 'date': 'Sep 28, 2023', 'amount': 125000.0, 'isCredit': true},
-    //   {'title': 'Referral Bonus', 'date': 'Sep 25, 2023', 'amount': 15000.0, 'isCredit': true},
-    // ];
+    // final transactions = MockData.fakeTransactions.take(4).toList();
 
     final userProvider = context.watch<UserProvider>();
     final currentUser = userProvider.currentUser;
 
-    final List<Transaction>? transactions = currentUser?.transactions.take(5).toList();
+    final List<Transaction>? transactions = currentUser?.transactions.take(4).toList();
 
     if(transactions!.isEmpty){
       return Center(
@@ -265,14 +273,14 @@ class WalletScreen extends StatelessWidget {
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                     ),
                     Text(
-                      tx.createdAt ?? 'Just Now',
+                      formatSmartDate(tx.createdAt),
                       style: const TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                   ],
                 ),
               ),
               Text(
-                "${isCredit ? '+' : ''}${formatCurrency(tx.amount, currency: 'NGN')}",
+                "${isCredit ? '+' : '-'}${formatCurrency(tx.amount, currency: 'NGN')}",
                 style: TextStyle(
                   fontWeight: FontWeight.w900,
                   color: isCredit ? Colors.green.shade800 : Colors.red.shade800,

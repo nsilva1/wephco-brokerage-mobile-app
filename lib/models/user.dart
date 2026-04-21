@@ -1,6 +1,7 @@
 import 'package:hive/hive.dart';
 import 'wallet.dart';
 import 'transaction.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
 
 part 'user.g.dart';
 
@@ -25,7 +26,7 @@ class UserInfo extends HiveObject {
   @HiveField(8)
   final List<Transaction> transactions;
   @HiveField(9)
-  final String? createdAt;
+  final DateTime? createdAt;
 
   UserInfo({
     required this.id,
@@ -53,7 +54,9 @@ class UserInfo extends HiveObject {
       transactions: (map['transactions'] as List? ?? [])
           .map((t) => Transaction.fromMap(t))
           .toList(),
-      createdAt: map['createdAt'],
+      createdAt: map['createdAt'] is Timestamp 
+        ? (map['createdAt'] as Timestamp).toDate() 
+        : null,
     );
   }
 }

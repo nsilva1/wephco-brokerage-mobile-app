@@ -47,10 +47,10 @@ class _MainLayoutState extends State<MainLayout> {
         Navigator.pushNamed(context, '/leads/new');
         break;
       case 2: // Properties
-        Navigator.pushNamed(context, '/properties/new');
+        Navigator.pushNamed(context, '/leads/new');
         break;
       case 3: // Wallet
-        print('Navigating to Withdrawal/Transaction Screen');
+        Navigator.pushNamed(context, '/leads/new');
         break;
     }
   }
@@ -59,9 +59,9 @@ class _MainLayoutState extends State<MainLayout> {
   IconData _getFabIcon() {
     switch (_selectedIndex) {
       case 2:
-        return Icons.add_business;
+        return Icons.person_add_alt_1;
       case 3:
-        return Icons.add_card;
+        return Icons.person_add_alt_1;
       default:
         return Icons.person_add_alt_1;
     }

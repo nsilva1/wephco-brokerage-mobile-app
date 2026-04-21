@@ -1,5 +1,6 @@
 import '../models/lead.dart';
 import '../models/property.dart';
+import '../models/transaction.dart';
 
 class MockData {
   static List<Lead> get fakeLeads => [
@@ -158,4 +159,82 @@ class MockData {
       currency: 'USD'
     ),
   ];
+
+  static List<Transaction> get fakeTransactions => [
+        Transaction(
+          id: 'tx-001',
+          userId: 'user-789',
+          type: 'Deposit',
+          transactionType: 'Credit',
+          amount: 500000.00,
+          status: 'Completed',
+          description: 'Initial wallet top-up via Paystack',
+          createdAt: DateTime.utc(2026, 3, 20),
+        ),
+        Transaction(
+          id: 'tx-002',
+          userId: 'user-789',
+          propertyId: 'prop-101',
+          type: 'Income',
+          transactionType: 'Credit',
+          amount: 120000.00,
+          status: 'Completed',
+          description: 'Monthly rental income for Unit 4, Maitama Apartments',
+          createdAt: DateTime.utc(2026, 3, 24),
+        ),
+        Transaction(
+          id: 'tx-003',
+          userId: 'user-789',
+          recipientId: 'user-202',
+          propertyId: 'prop-105',
+          type: 'Escrow',
+          transactionType: 'Debit',
+          amount: 2500000.00,
+          status: 'Pending',
+          description: 'Escrow payment for 2-Bedroom Terrace (Down payment)',
+          createdAt: DateTime.utc(2026, 3, 29),
+        ),
+        Transaction(
+          id: 'tx-004',
+          userId: 'user-789',
+          type: 'Withdrawal',
+          transactionType: 'Debit',
+          amount: 45000.00,
+          status: 'Failed',
+          description: 'Withdrawal to Zenith Bank account (Insufficient Funds)',
+          createdAt: DateTime.utc(2026, 4, 2),
+        ),
+        Transaction(
+          id: 'tx-005',
+          userId: 'user-789',
+          propertyId: 'prop-202',
+          type: 'Income',
+          transactionType: 'Credit',
+          amount: 75000.00,
+          status: 'Completed',
+          description: 'Service charge reimbursement',
+          createdAt: DateTime.utc(2026, 4, 10),
+        ),
+        Transaction(
+          id: 'tx-006',
+          userId: 'user-789',
+          propertyId: 'prop-205',
+          type: 'Income',
+          transactionType: 'Credit',
+          amount: 75000.00,
+          status: 'Completed',
+          description: 'Service charge payment',
+          createdAt: DateTime.utc(2026, 4, 15),
+        ),
+        Transaction(
+          id: 'tx-007',
+          userId: 'user-789',
+          type: 'Withdrawal',
+          transactionType: 'Debit',
+          amount: 45000.00,
+          status: 'Pending',
+          description: 'Withdrawal to GT Bank account',
+          createdAt: DateTime.utc(2026, 4, 20),
+        ),
+      ];
 }

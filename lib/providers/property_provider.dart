@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import '../services/hive_service.dart';
 import '../models/property.dart';
-import '../data/mock_data.dart';
+// import '../data/mock_data.dart';
 
 class PropertyProvider extends ChangeNotifier {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -19,7 +19,7 @@ class PropertyProvider extends ChangeNotifier {
   PropertyProvider() {
     // 1. Load from Hive immediately so the screen isn't empty
     // _properties = HiveService.instance.allCachedProperties;
-    _properties = MockData.fakeProperties;
+    _properties = HiveService.instance.allCachedProperties;
     
     // 2. Fetch fresh data from Firestore
     // fetchProperties();
@@ -32,14 +32,24 @@ class PropertyProvider extends ChangeNotifier {
     try {
       // Fetch from Firestore (ordered by newest first)
       QuerySnapshot snapshot = await _db
-          .collection('properties')
-          .orderBy('createdAt', descending: true)
-          .get();
+          .collection('properties').get();
 
       // Convert docs to models
       List<Property> fetched = snapshot.docs.map((doc) {
         return Property.fromMap(doc.data() as Map<String, dynamic>, doc.id);
       }).toList();
+
+      // sort fetched properties
+      fetched.sort((a, b) {
+        final dateA = a.createdAt;
+        final dateB = b.createdAt;
+
+        if (dateA == null && dateB == null) return 0;
+        if (dateA == null) return 1; // Nulls move to the end
+        if (dateB == null) return -1;
+
+        return dateB.compareTo(dateA); // Descending order
+      });
 
       // 3. Update Local Cache (Hive)
       await HiveService.instance.saveAllProperties(fetched);

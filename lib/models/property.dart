@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 part 'property.g.dart';
 
@@ -52,8 +53,10 @@ class Property extends HiveObject {
       status: map['status'] ?? 'New Launch',
       description: map['description'] ?? '',
       image: map['image'] ?? '',
-      createdAt: map['createdAt'],
       currency: map['currency'] ?? '',
+      createdAt: map['createdAt'] is Timestamp 
+        ? (map['createdAt'] as Timestamp).toDate() 
+        : null,
     );
   }
 }

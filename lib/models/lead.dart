@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 part 'lead.g.dart';
 
@@ -52,8 +53,10 @@ class Lead extends HiveObject {
       budget: map['budget'] != null ? (map['budget'] as num).toDouble() : null,
       source: map['source'] ?? '',
       status: map['status'] ?? 'New Lead',
-      createdAt: map['createdAt'] ?? '',
       currency: map['currency'] ?? '',
+      createdAt: map['createdAt'] is Timestamp 
+        ? (map['createdAt'] as Timestamp).toDate() 
+        : null,
     );
   }
 

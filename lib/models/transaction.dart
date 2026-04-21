@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 part 'transaction.g.dart';
 
@@ -23,7 +24,7 @@ class Transaction extends HiveObject {
   @HiveField(8)
   final String description;
   @HiveField(9)
-  final String? createdAt;
+  final DateTime? createdAt;
 
   Transaction({
     this.id,
@@ -49,7 +50,9 @@ class Transaction extends HiveObject {
       amount: (map['amount'] as num).toDouble(),
       status: map['status'] ?? 'Pending',
       description: map['description'] ?? '',
-      createdAt: map['createdAt'],
+      createdAt: map['createdAt'] is Timestamp 
+        ? (map['createdAt'] as Timestamp).toDate() 
+        : null,
     );
   }
 }

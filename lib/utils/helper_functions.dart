@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:intl/intl.dart';
 
 // Helper function to launch the phone dialer
 Future<void> callPhone(String phoneNumber) async {
@@ -62,3 +63,15 @@ String formatCurrency(double amount, {bool compact = false, String currency = 'N
     
     return "$symbol$formatted";
   }
+
+  String formatSmartDate(DateTime? dateTime) {
+  if (dateTime == null) return 'N/A';
+  
+  final now = DateTime.now();
+  final difference = now.difference(dateTime).inDays;
+
+  if (difference == 0) return "Today";
+  if (difference == 1) return "Yesterday";
+  
+  return DateFormat('d MMM y').format(dateTime);
+}

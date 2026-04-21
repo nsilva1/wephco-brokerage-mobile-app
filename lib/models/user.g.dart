@@ -26,7 +26,7 @@ class UserInfoAdapter extends TypeAdapter<UserInfo> {
       dealsClosed: fields[6] as int,
       wallet: fields[7] as WalletInfo,
       transactions: (fields[8] as List).cast<Transaction>(),
-      createdAt: fields[9] as String?,
+      createdAt: fields[9] as DateTime?,
     );
   }
 

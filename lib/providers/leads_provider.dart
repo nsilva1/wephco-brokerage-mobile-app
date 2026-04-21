@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import '../services/hive_service.dart';
 import '../models/lead.dart';
-import '../data/mock_data.dart';
+// import '../data/mock_data.dart';
 
 class LeadProvider extends ChangeNotifier {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -19,7 +19,7 @@ class LeadProvider extends ChangeNotifier {
 
   LeadProvider() {
     // 1. Load from Hive/Mock immediately so the screen isn't empty
-    _leads = MockData.fakeLeads;
+    _leads = HiveService.instance.allCachedLeads;
     
     // 2. We don't fetch in the constructor directly because HiveService 
     // currentUser might be null during the very first app boot.
@@ -92,14 +92,8 @@ class LeadProvider extends ChangeNotifier {
 
     try {
       // RULE 1: Strict Paths
-      // Mandatory path: /artifacts/{appId}/public/data/{collectionName}
-      const String appId = 'wephco-brokerage'; 
-      final leadsCollection = _db
-          .collection('artifacts')
-          .doc(appId)
-          .collection('public')
-          .doc('data')
-          .collection('leads');
+      
+      final leadsCollection = _db.collection('leads');
 
       // RULE 2: No Complex Queries
       // We avoid .orderBy() in the Firestore query to prevent index errors.
@@ -115,7 +109,14 @@ class LeadProvider extends ChangeNotifier {
       List<Lead> userLeads = allLeads.where((lead) => lead.userId == userId).toList();
 
       // Sort in memory: Newest first
-      userLeads.sort((a, b) => (b.createdAt ?? DateTime.now()).compareTo(a.createdAt ?? DateTime.now()));
+      userLeads.sort((a, b) {
+        final dateA = a.createdAt;
+        final dateB = b.createdAt;
+        if (dateA == null && dateB == null) return 0;
+        if (dateA == null) return 1;
+        if (dateB == null) return -1;
+        return dateB.compareTo(dateA); 
+      });
 
       // 3. Update Local Cache (Hive)
       await HiveService.instance.saveAllLeads(userLeads);

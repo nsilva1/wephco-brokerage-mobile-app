@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../providers/user_provider.dart';
+import '../providers/leads_provider.dart';
+import '../providers/property_provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -61,6 +63,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
         if (mounted) {
           debugPrint("Splash: Navigating to Home");
+          await PropertyProvider().fetchProperties();
+          await LeadProvider().fetchLeads(user.uid);
           Navigator.pushReplacementNamed(context, '/home');
         }
       } else {
