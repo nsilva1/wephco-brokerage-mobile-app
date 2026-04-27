@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 
 // Models
 import 'package:wephco_brokerage/models/lead.dart';
@@ -11,6 +12,8 @@ import 'package:wephco_brokerage/models/transaction.dart';
 import 'package:wephco_brokerage/models/user.dart';
 import 'package:wephco_brokerage/models/wallet.dart';
 import 'package:wephco_brokerage/screens/leads/add_lead.dart';
+import 'package:wephco_brokerage/models/bank_info.dart';
+import 'package:wephco_brokerage/models/bank.dart';
 
 // Providers
 import './providers/user_provider.dart';
@@ -30,6 +33,7 @@ import 'package:wephco_brokerage/screens/auth/register.dart';
 import 'package:wephco_brokerage/screens/main_layout.dart';
 import 'package:wephco_brokerage/screens/properties/property_details.dart';
 import 'package:wephco_brokerage/screens/wallet/wallet_transaction_history.dart';
+import 'package:wephco_brokerage/screens/sidebar/kyc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,13 +47,20 @@ void main() async {
   Hive.registerAdapter(TransactionAdapter());
   Hive.registerAdapter(UserInfoAdapter());
   Hive.registerAdapter(WalletInfoAdapter());
-
+  Hive.registerAdapter(BankInfoAdapter());
+  Hive.registerAdapter(BankAdapter());
   // Initialise Hive instance
   await HiveService.instance.init();
 
   // Initialise Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  await FirebaseAppCheck.instance.activate(
+    androidProvider: AndroidProvider.playIntegrity,
+    // appleProvider: AppleProvider.appAttest,
+    // providerAndroid: AndroidAppCheckProvider
   );
 
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
@@ -93,7 +104,8 @@ class MyApp extends StatelessWidget {
         '/wallet': (context) => const MainLayout(initialIndex: 3,),
         '/properties/detail': (context) => const PropertyDetails(),
         '/leads/new': (context) => const AddLeadScreen(),
-        '/wallet/transactions': (context) => WalletTransactionHistory()
+        '/wallet/transactions': (context) => WalletTransactionHistory(),
+        '/kyc': (context) => const KYCScreen(),
       },
     );
   }

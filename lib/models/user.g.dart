@@ -21,19 +21,20 @@ class UserInfoAdapter extends TypeAdapter<UserInfo> {
       email: fields[1] as String,
       name: fields[2] as String,
       role: fields[3] as String,
-      commision: fields[4] as double,
+      commission: fields[4] as double,
       activeLeads: fields[5] as int,
       dealsClosed: fields[6] as int,
       wallet: fields[7] as WalletInfo,
-      transactions: (fields[8] as List).cast<Transaction>(),
-      createdAt: fields[9] as DateTime?,
+      transactions: (fields[8] as List?)?.cast<Transaction>(),
+      createdAt: fields[9] as String?,
+      bankInfo: fields[10] as BankInfo?,
     );
   }
 
   @override
   void write(BinaryWriter writer, UserInfo obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -43,7 +44,7 @@ class UserInfoAdapter extends TypeAdapter<UserInfo> {
       ..writeByte(3)
       ..write(obj.role)
       ..writeByte(4)
-      ..write(obj.commision)
+      ..write(obj.commission)
       ..writeByte(5)
       ..write(obj.activeLeads)
       ..writeByte(6)
@@ -53,7 +54,9 @@ class UserInfoAdapter extends TypeAdapter<UserInfo> {
       ..writeByte(8)
       ..write(obj.transactions)
       ..writeByte(9)
-      ..write(obj.createdAt);
+      ..write(obj.createdAt)
+      ..writeByte(10)
+      ..write(obj.bankInfo);
   }
 
   @override

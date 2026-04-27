@@ -34,7 +34,7 @@ class LeadAdapter extends TypeAdapter<Lead> {
   @override
   void write(BinaryWriter writer, Lead obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)

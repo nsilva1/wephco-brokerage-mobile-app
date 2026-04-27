@@ -31,7 +31,7 @@ class AuthService {
       'name': name,
       'email': email,
       'role': role,
-      'commision': 0.0,
+      'commission': 0.0,
       'activeLeads': 0,
       'dealsClosed': 0,
       'wallet': {
@@ -40,7 +40,9 @@ class AuthService {
         'totalEarnings': 0.0,
         'currency': 'NGN',
       },
+      'transactions': [],
       'createdAt': DateTime.now().toIso8601String(),
+      'bankInfo': null
     });
   }
 

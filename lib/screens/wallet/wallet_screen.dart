@@ -224,7 +224,7 @@ class WalletScreen extends StatelessWidget {
     final userProvider = context.watch<UserProvider>();
     final currentUser = userProvider.currentUser;
 
-    final List<Transaction>? transactions = currentUser?.transactions.take(4).toList();
+    final List<Transaction>? transactions = currentUser?.transactions?.take(4).toList();
 
     if(transactions!.isEmpty){
       return Center(

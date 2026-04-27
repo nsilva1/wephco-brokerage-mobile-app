@@ -36,7 +36,7 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 30),
 
               // 2. Metrics Bento Grid
-              _buildMetricsGrid(context, leads.length, currentUser.commision, totalValue),
+              _buildMetricsGrid(context, leads.length, currentUser.commission, totalValue),
 
               const SizedBox(height: 24),
 

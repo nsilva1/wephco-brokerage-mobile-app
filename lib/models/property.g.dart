@@ -34,7 +34,7 @@ class PropertyAdapter extends TypeAdapter<Property> {
   @override
   void write(BinaryWriter writer, Property obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)

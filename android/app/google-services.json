@@ -12,7 +12,20 @@
           "package_name": "com.example.wephco_brokerage"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1044655429742-vouv3bi6v2p942dcvdq0rert8rqd1623.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.wephco_brokerage",
+            "certificate_hash": "f72eb9614983086f03aa5a08aed44800e0cf1416"
+          }
+        },
+        {
+          "client_id": "1044655429742-p939r573f5pevjgvpvepg6b6rqdhgq19.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBhgZQYslZGRiiB7b3yiFCTQEMFP57rxl8"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1044655429742-p939r573f5pevjgvpvepg6b6rqdhgq19.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1044655429742-cmtqil5u7mtcgui02bulghm6ptlbse6o.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.wephcoBrokerage"
+              }
+            }
+          ]
         }
       }
     }

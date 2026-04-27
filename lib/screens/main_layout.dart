@@ -15,17 +15,33 @@ class MainLayout extends StatefulWidget {
   State<MainLayout> createState() => _MainLayoutState();
 }
 
-class _MainLayoutState extends State<MainLayout> {
+class _MainLayoutState extends State<MainLayout>
+    with SingleTickerProviderStateMixin {
   late int _selectedIndex;
+  bool _isFabOpen = false;
+  late AnimationController _animationController;
+  late Animation<double> _fabAnimation;
 
   @override
   void initState() {
     super.initState();
-    // Initialize the index based on what was passed to the widget
     _selectedIndex = widget.initialIndex;
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+    _fabAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOut,
+    );
   }
 
-  // 1. Define your pages here
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
   final List<Widget> _pages = [
     const HomeScreen(),
     const LeadsScreen(),
@@ -39,145 +55,211 @@ class _MainLayoutState extends State<MainLayout> {
     });
   }
 
-  // Helper to determine FAB action based on current tab
-  void _handleFabPressed() {
-    switch (_selectedIndex) {
-      case 0: // Dashboard
-      case 1: // Leads
-        Navigator.pushNamed(context, '/leads/new');
-        break;
-      case 2: // Properties
-        Navigator.pushNamed(context, '/leads/new');
-        break;
-      case 3: // Wallet
-        Navigator.pushNamed(context, '/leads/new');
-        break;
-    }
+  void _toggleFab() {
+    setState(() {
+      _isFabOpen = !_isFabOpen;
+      if (_isFabOpen) {
+        _animationController.forward();
+      } else {
+        _animationController.reverse();
+      }
+    });
   }
 
-  // Helper to determine FAB icon
-  IconData _getFabIcon() {
-    switch (_selectedIndex) {
-      case 2:
-        return Icons.person_add_alt_1;
-      case 3:
-        return Icons.person_add_alt_1;
-      default:
-        return Icons.person_add_alt_1;
-    }
+  void _closeFab() {
+    setState(() {
+      _isFabOpen = false;
+      _animationController.reverse();
+    });
   }
+
+  // Speed-dial menu items
+  List<_SpeedDialItem> get _speedDialItems => [
+        _SpeedDialItem(
+          label: 'Logout',
+          icon: Icons.logout,
+          onTap: () {
+            _closeFab();
+            logout(context);
+          },
+        ),
+        _SpeedDialItem(
+          label: 'Profile',
+          icon: Icons.person,
+          onTap: () {
+            _closeFab();
+            Navigator.pushNamed(context, '/profile');
+          },
+        ),
+        _SpeedDialItem(
+          label: 'Settings',
+          icon: Icons.settings,
+          onTap: () {
+            _closeFab();
+            Navigator.pushNamed(context, '/settings');
+          },
+        ),
+        _SpeedDialItem(
+          label: 'KYC',
+          icon: Icons.edit_document,
+          onTap: () {
+            _closeFab();
+            Navigator.pushNamed(context, '/kyc');
+          },
+        ),
+      ];
 
   @override
   Widget build(BuildContext context) {
-    final user = context.read<UserProvider>().currentUser;
+    // final user = context.read<UserProvider>().currentUser;
+    final primaryColor = Theme.of(context).colorScheme.primary;
 
-    return SafeArea(child: Scaffold(
-      appBar: AppBar(
-        title: const Text("Wephco Brokerage"),
-        backgroundColor: const Color(0xFF064E3B),
-        foregroundColor: Colors.white,
-      ),
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Wephco Brokerage"),
+          backgroundColor: const Color(0xFF064E3B),
+          foregroundColor: Colors.white,
+        ),
 
-      // --- The Side Drawer ---
-      drawer: Drawer(
-        backgroundColor: Theme.of(context).colorScheme.primary,
-  child: Column( // Use a Column instead of just a ListView
-    children: [
-      // 1. The Scrollable Area
-      Expanded(
-        child: ListView(
-          padding: EdgeInsets.zero,
+        body: Stack(
           children: [
-            DrawerHeader(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.person, color: Color(0xFF064E3B)),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    user!.name,
-                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    user.email,
-                    style: const TextStyle(color: Colors.white70, fontSize: 14),
-                  ),
-                ],
+            _pages[_selectedIndex],
+
+            // Dim overlay when FAB is open
+            if (_isFabOpen)
+              GestureDetector(
+                onTap: _closeFab,
+                child: Container(
+                  color: Colors.black.withValues(alpha: 0.3),
+                ),
               ),
-            ),
-            ListTile(
-              iconColor: Theme.of(context).colorScheme.secondary,
-              textColor: Theme.of(context).colorScheme.secondary,
-              leading: const Icon(Icons.edit_document),
-              title: const Text("KYC"),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              iconColor: Theme.of(context).colorScheme.secondary,
-              textColor: Theme.of(context).colorScheme.secondary,
-              leading: const Icon(Icons.settings),
-              title: const Text("Settings"),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              iconColor: Theme.of(context).colorScheme.secondary,
-              textColor: Theme.of(context).colorScheme.secondary,
-              leading: const Icon(Icons.help_outline),
-              title: const Text("Support"),
-              onTap: () => Navigator.pop(context),
+          ],
+        ),
+
+        // --- Speed Dial FAB ---
+        floatingActionButton: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            // Speed dial items (animate in/out)
+            ..._speedDialItems.asMap().entries.map((entry) {
+              final index = entry.key;
+              final item = entry.value;
+
+              return AnimatedBuilder(
+                animation: _fabAnimation,
+                builder: (context, child) {
+                  final delay = index * 0.15;
+                  final animValue = Curves.easeOut.transform(
+                    ((_fabAnimation.value - delay) / (1 - delay))
+                        .clamp(0.0, 1.0),
+                  );
+                  return Opacity(
+                    opacity: animValue,
+                    child: Transform.translate(
+                      offset: Offset(0, 10 * (1 - animValue)),
+                      child: child,
+                    ),
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Label chip
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.15),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            )
+                          ],
+                        ),
+                        child: Text(
+                          item.label,
+                          style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black87),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Mini FAB
+                      FloatingActionButton.small(
+                        heroTag: item.label,
+                        onPressed: item.onTap,
+                        backgroundColor: primaryColor,
+                        foregroundColor: Colors.white,
+                        elevation: 3,
+                        child: Icon(item.icon, size: 18),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList().reversed,
+
+            // Main FAB (rotates to X when open)
+            FloatingActionButton(
+              heroTag: 'main_fab',
+              onPressed: _toggleFab,
+              backgroundColor: primaryColor,
+              foregroundColor: Colors.white,
+              elevation: 4,
+              child: _isFabOpen ? const Icon(Icons.close) : const Icon(Icons.menu),
             ),
           ],
         ),
-      ),
 
-      // 2. The Permanent Bottom Area
-      const Divider(height: 1), // Optional: clean line above logout
-      ListTile(
-        leading: const Icon(Icons.logout, color: Colors.grey),
-        title: const Text("Logout", style: TextStyle(color: Colors.grey)),
-        onTap: () {
-          // Trigger your logout logic
-          // _handleLogout(context);
-          print('logout tapped');
-        },
-      ),
-      // Optional: Add a little padding at the bottom for modern phones (Safe Area)
-      const SizedBox(height: 20), 
-    ],
-  ),
-),
-
-      // --- The Dynamic Body ---
-      body: _pages[_selectedIndex],
-
-      // --- Floating Action Button ---
-        floatingActionButton: FloatingActionButton(
-          onPressed: _handleFabPressed,
-          backgroundColor: const Color(0xFF064E3B),
-          foregroundColor: Colors.white,
-          elevation: 4,
-          child: Icon(_getFabIcon()),
+        // --- The Bottom Navigation ---
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: (index) {
+            _closeFab();
+            _onItemTapped(index);
+          },
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: primaryColor,
+          unselectedItemColor: Colors.grey,
+          items: const [
+            BottomNavigationBarItem(
+                icon: Icon(Icons.dashboard), label: "Dashboard"),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.people), label: "Leads"),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.business), label: "Properties"),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.account_balance_wallet), label: "Wallet"),
+          ],
         ),
-
-      // --- The Bottom Navigation ---
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed, // Essential for 4+ items
-        selectedItemColor: const Color(0xFF064E3B),
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: "Dashboard"),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: "Leads"),
-          BottomNavigationBarItem(icon: Icon(Icons.business), label: "Properties"),
-          BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet), label: "Wallet"),
-        ],
       ),
-    ));
+    );
   }
+}
+
+void logout(BuildContext context) {
+  // Clear user data from provider
+  context.read<UserProvider>().logout;
+
+  // Navigate to login screen
+  Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+}
+class _SpeedDialItem {
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _SpeedDialItem({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
 }

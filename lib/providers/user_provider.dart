@@ -5,6 +5,7 @@ import '../services/hive_service.dart';
 import '../models/user.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import '../services/auth_service.dart';
+import 'package:wephco_brokerage/models/bank_info.dart';
 
 class UserProvider extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -19,6 +20,7 @@ class UserProvider extends ChangeNotifier {
   UserInfo? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   bool get isAuthLoading => _isAuthLoading;
+  void get logout => _handleLogout();
 
   UserProvider() {
     _currentUser = HiveService.instance.currentUser;
@@ -135,4 +137,108 @@ class UserProvider extends ChangeNotifier {
     _isLoading = value;
     notifyListeners();
   }
+
+  Future<String?> submitNIN(String nin) async {
+  _setLoading(true);
+  try {
+    if (_currentUser == null) return "User not authenticated.";
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return "User not authenticated.";
+
+    // 1. Write to Firestore
+    await _db.collection('users').doc(uid).update({
+      'bankInfo.nin': int.tryParse(nin),
+    });
+
+    // 2. Update local model via copyWith
+    _currentUser = _currentUser!.copyWith(
+  bankInfo: (_currentUser!.bankInfo ?? BankInfo()).copyWith(nin: int.tryParse(nin)),
+);
+
+    // 3. Persist to Hive
+    await HiveService.instance.saveUser(_currentUser!);
+
+    notifyListeners();
+    return null;
+  } on FirebaseException catch (e) {
+    return e.message ?? "Failed to save NIN.";
+  } catch (e) {
+    return "An unexpected error occurred.";
+  } finally {
+    _setLoading(false);
+  }
+}
+
+Future<String?> submitBVN(String bvn) async {
+  _setLoading(true);
+  try {
+    if (_currentUser == null) return "User not authenticated.";
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return "User not authenticated.";
+
+    // 1. Write to Firestore
+    await _db.collection('users').doc(uid).update({
+      'bankInfo.bvn': int.tryParse(bvn),
+    });
+
+    // 2. Update local model via copyWith
+    _currentUser = _currentUser!.copyWith(
+      bankInfo: _currentUser!.bankInfo?.copyWith(bvn: int.tryParse(bvn)),
+    );
+
+    // 3. Persist to Hive
+    await HiveService.instance.saveUser(_currentUser!);
+
+    notifyListeners();
+    return null;
+  } on FirebaseException catch (e) {
+    return e.message ?? "Failed to save BVN.";
+  } catch (e) {
+    return "An unexpected error occurred.";
+  } finally {
+    _setLoading(false);
+  }
+}
+
+Future<String?> submitBankInfo({
+  required String bankName,
+  required String bankCode,
+  required String accountNumber,
+  required String accountName,
+}) async {
+  _setLoading(true);
+  try {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return "User not authenticated.";
+
+    await _db.collection('users').doc(uid).update({
+      'bankInfo.bankName': bankName,
+      'bankInfo.bankCode': bankCode,
+      'bankInfo.bankAccountNumber': int.tryParse(accountNumber),
+      'bankInfo.bankAccountName': accountName,
+    });
+
+    _currentUser = _currentUser!.copyWith(
+      bankInfo: _currentUser!.bankInfo?.copyWith(
+        bankName: bankName,
+        bankCode: bankCode,
+        bankAccountNumber: int.tryParse(accountNumber),
+        bankAccountName: accountName,
+      )
+    );
+
+    if (_currentUser != null) {
+      await HiveService.instance.saveUser(_currentUser!);
+    }
+
+    notifyListeners();
+    return null;
+  } on FirebaseException catch (e) {
+    return e.message ?? "Failed to save bank info.";
+  } catch (e) {
+    return "An unexpected error occurred.";
+  } finally {
+    _setLoading(false);
+  }
+}
 }
