@@ -34,6 +34,8 @@ import 'package:wephco_brokerage/screens/main_layout.dart';
 import 'package:wephco_brokerage/screens/properties/property_details.dart';
 import 'package:wephco_brokerage/screens/wallet/wallet_transaction_history.dart';
 import 'package:wephco_brokerage/screens/sidebar/kyc.dart';
+import 'package:wephco_brokerage/screens/sidebar/profile.dart';
+import 'package:wephco_brokerage/screens/sidebar/settings.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -106,6 +108,8 @@ class MyApp extends StatelessWidget {
         '/leads/new': (context) => const AddLeadScreen(),
         '/wallet/transactions': (context) => WalletTransactionHistory(),
         '/kyc': (context) => const KYCScreen(),
+        '/profile': (context) => const ProfileScreen(),
+        '/settings': (context) => const SettingsScreen(),
       },
     );
   }

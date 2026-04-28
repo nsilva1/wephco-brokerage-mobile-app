@@ -20,7 +20,7 @@ class UserProvider extends ChangeNotifier {
   UserInfo? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   bool get isAuthLoading => _isAuthLoading;
-  void get logout => _handleLogout();
+  Future<void> get logout => _handleLogout();
 
   UserProvider() {
     _currentUser = HiveService.instance.currentUser;
