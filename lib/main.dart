@@ -41,6 +41,11 @@ import 'package:wephco_brokerage/screens/wallet/wallet_transaction_history.dart'
 import 'package:wephco_brokerage/screens/sidebar/kyc.dart';
 import 'package:wephco_brokerage/screens/sidebar/profile.dart';
 import 'package:wephco_brokerage/screens/sidebar/settings.dart';
+import 'package:wephco_brokerage/screens/leads/lead_details_screen.dart';
+import 'package:wephco_brokerage/screens/auth/change_password.dart';
+import 'package:wephco_brokerage/screens/support/support_screen.dart';
+import 'package:wephco_brokerage/screens/support/faq.dart';
+import 'package:wephco_brokerage/screens/support/privacy_policy_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -123,6 +128,14 @@ class MyApp extends StatelessWidget {
         '/kyc': (context) => const AuthGuard(child: KYCScreen()),
         '/profile': (context) => const AuthGuard(child: ProfileScreen()),
         '/settings': (context) => const AuthGuard(child: SettingsScreen()),
+        '/leads/detail': (context) {
+          final lead = ModalRoute.of(context)!.settings.arguments as Lead;
+          return AuthGuard(child: LeadDetailScreen(lead: lead));
+        },
+        '/change-password': (context) => const AuthGuard(child: ChangePasswordScreen()),
+        '/support': (context) => const AuthGuard(child: SupportScreen()),
+        '/faq': (context) => const AuthGuard(child: FAQScreen()),
+        '/privacy-policy': (context) => const AuthGuard(child: PrivacyPolicyScreen()),
       },
     );
   }

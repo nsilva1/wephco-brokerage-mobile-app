@@ -63,6 +63,7 @@ class LeadProvider extends ChangeNotifier {
       status: lead.status,
       createdAt: dateNow,
       currency: lead.currency,
+      notes: lead.notes ?? '',
     );
 
       // 4. Update local state (Prepend to list for "newest first")
@@ -149,4 +150,37 @@ class LeadProvider extends ChangeNotifier {
     _searchQuery = query;
     notifyListeners(); 
   }
+
+  Future<String?> updateLeadStatus(String leadId, String status) async {
+  try {
+    await _db.collection('leads').doc(leadId).update({'status': status});
+    // Update local list
+    final index = _leads.indexWhere((l) => l.id == leadId);
+    if (index != -1) {
+      _leads[index] = _leads[index].copyWith(status: status);
+      notifyListeners();
+    }
+    return null;
+  } on FirebaseException catch (e) {
+    return e.message ?? "Failed to update status.";
+  } catch (e) {
+    return "An unexpected error occurred.";
+  }
+}
+
+Future<String?> addNoteToLead(String leadId, String note) async {
+  try {
+    await _db.collection('leads').doc(leadId).update({'notes': note});
+    final index = _leads.indexWhere((l) => l.id == leadId);
+    if (index != -1) {
+      _leads[index] = _leads[index].copyWith(notes: note);
+      notifyListeners();
+    }
+    return null;
+  } on FirebaseException catch (e) {
+    return e.message ?? "Failed to save note.";
+  } catch (e) {
+    return "An unexpected error occurred.";
+  }
+}
 }

@@ -26,14 +26,18 @@ class SettingsScreen extends StatelessWidget {
               context,
               icon: Icons.lock_outline,
               label: "Change Password",
-              onTap: () {}, // navigate to change password screen
+              onTap: () {
+                Navigator.pushNamed(context, '/change-password');
+              }, // navigate to change password screen
             ),
             _divider(),
             _settingsTile(
               context,
               icon: Icons.verified_user_outlined,
               label: "Verification & Banking",
-              onTap: () {}, // navigate to KYC screen
+              onTap: () {
+                Navigator.pushNamed(context, '/kyc');
+              }, // navigate to KYC screen
             ),
           ]),
           const SizedBox(height: 20),
@@ -72,21 +76,27 @@ class SettingsScreen extends StatelessWidget {
               context,
               icon: Icons.help_outline,
               label: "Help & FAQ",
-              onTap: () {},
+              onTap: () {
+                Navigator.pushNamed(context, '/faq');
+              },
             ),
             _divider(),
             _settingsTile(
               context,
               icon: Icons.privacy_tip_outlined,
               label: "Privacy Policy",
-              onTap: () {},
+              onTap: () {
+                Navigator.pushNamed(context, '/privacy-policy');
+              },
             ),
             _divider(),
             _settingsTile(
               context,
               icon: Icons.description_outlined,
-              label: "Terms of Service",
-              onTap: () {},
+              label: "Contact Support",
+              onTap: () {
+                Navigator.pushNamed(context, '/support');
+              },
             ),
           ]),
           const SizedBox(height: 20),

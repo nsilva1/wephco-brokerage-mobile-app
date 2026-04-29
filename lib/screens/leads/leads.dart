@@ -148,6 +148,7 @@ class _LeadsScreenState extends State<LeadsScreen> {
                 children: [
                   // Top section: Lead Identity
                   ListTile(
+                    onTap: () => Navigator.pushNamed(context, '/leads/detail', arguments: lead),
                     contentPadding: const EdgeInsets.all(16),
                     leading: CircleAvatar(
                       backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
