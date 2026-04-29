@@ -29,6 +29,7 @@ import 'package:wephco_brokerage/services/notification_service.dart';
 // Config
 import 'package:wephco_brokerage/firebase_options.dart';
 import 'package:wephco_brokerage/utils/navigator_key.dart';
+import 'package:wephco_brokerage/utils/auth_guard.dart';
 
 // Screens
 import 'package:wephco_brokerage/screens/splash_screen.dart';
@@ -55,6 +56,7 @@ void main() async {
   Hive.registerAdapter(WalletInfoAdapter());
   Hive.registerAdapter(BankInfoAdapter());
   Hive.registerAdapter(BankAdapter());
+
   // Initialise Hive instance
   await HiveService.instance.init();
 
@@ -111,16 +113,16 @@ class MyApp extends StatelessWidget {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
-        '/home': (context) => const MainLayout(),
-        '/leads': (context) => const MainLayout(initialIndex: 1,),
-        '/properties': (context) => const MainLayout(initialIndex: 2,),
-        '/wallet': (context) => const MainLayout(initialIndex: 3,),
-        '/properties/detail': (context) => const PropertyDetails(),
-        '/leads/new': (context) => const AddLeadScreen(),
-        '/wallet/transactions': (context) => WalletTransactionHistory(),
-        '/kyc': (context) => const KYCScreen(),
-        '/profile': (context) => const ProfileScreen(),
-        '/settings': (context) => const SettingsScreen(),
+        '/home': (context) => const AuthGuard(child: MainLayout()),
+        '/leads': (context) => const AuthGuard(child: MainLayout(initialIndex: 1,)),
+        '/properties': (context) => const AuthGuard(child: MainLayout(initialIndex: 2,)),
+        '/wallet': (context) => const AuthGuard(child: MainLayout(initialIndex: 3,)),
+        '/properties/detail': (context) => const AuthGuard(child: PropertyDetails()),
+        '/leads/new': (context) => const AuthGuard(child: AddLeadScreen()),
+        '/wallet/transactions': (context) => const AuthGuard(child: WalletTransactionHistory()),
+        '/kyc': (context) => const AuthGuard(child: KYCScreen()),
+        '/profile': (context) => const AuthGuard(child: ProfileScreen()),
+        '/settings': (context) => const AuthGuard(child: SettingsScreen()),
       },
     );
   }
