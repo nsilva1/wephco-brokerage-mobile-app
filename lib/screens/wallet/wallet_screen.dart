@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
 import 'package:wephco_brokerage/models/transaction.dart';
 import '../../providers/user_provider.dart';
 import '../../utils/helper_functions.dart';
-// import '../../data/mock_data.dart';
+import '../../utils/bottom_sheet.dart';
+
+part 'withdraw_sheet.dart';
 
 class WalletScreen extends StatelessWidget {
   const WalletScreen({super.key});
-
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +27,7 @@ class WalletScreen extends StatelessWidget {
             const SizedBox(height: 30),
             _buildTransactionHeader(context),
             _buildTransactionList(context),
+            const SizedBox(height: 30),
           ],
         ),
       ),
@@ -32,26 +35,24 @@ class WalletScreen extends StatelessWidget {
   }
 
   Widget _buildBalanceCard(BuildContext context) {
-    final userProvider = context.watch<UserProvider>();
-    final currentUser = userProvider.currentUser;
+    final currentUser = context.watch<UserProvider>().currentUser;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFF003527), // Deep Emerald
+        color: const Color(0xFF003527),
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF003527).withValues(alpha: 0.2),
             blurRadius: 20,
             offset: const Offset(0, 10),
-          )
+          ),
         ],
       ),
       child: Stack(
         children: [
-          // Background Decoration
           Positioned(
             right: -30,
             top: -30,
@@ -72,7 +73,7 @@ class WalletScreen extends StatelessWidget {
                     const Text(
                       "WALLET BALANCE",
                       style: TextStyle(
-                        color: Color(0xFFFED488), // Gold
+                        color: Color(0xFFFED488),
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 1.5,
@@ -86,14 +87,21 @@ class WalletScreen extends StatelessWidget {
                       ),
                       child: const Text(
                         "NGN",
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  formatCurrency(currentUser?.wallet.availableBalance ?? 0, compact: true, currency: 'NGN'),
+                  formatCurrency(
+                    currentUser?.wallet.availableBalance ?? 0,
+                    currency: 'NGN',
+                  ),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 36,
@@ -103,13 +111,25 @@ class WalletScreen extends StatelessWidget {
                 const SizedBox(height: 24),
                 const Divider(color: Colors.white24),
                 const SizedBox(height: 16),
-                // Row(
-                //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                //   children: [
-                //     _cardSubStat("PENDING", currentUser?.wallet.escrowBalance.toString() ?? '0'),
-                //     _cardSubStat("NEXT PAYOUT", "OCT 12"),
-                //   ],
-                // ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _cardSubStat(
+                      "AVAILABLE",
+                      formatCurrency(
+                        currentUser?.wallet.availableBalance ?? 0,
+                        currency: 'NGN',
+                      ),
+                    ),
+                    _cardSubStat(
+                      "IN ESCROW",
+                      formatCurrency(
+                        currentUser?.wallet.escrowBalance ?? 0,
+                        currency: 'NGN',
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -118,86 +138,77 @@ class WalletScreen extends StatelessWidget {
     );
   }
 
+  Widget _cardSubStat(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFFFED488),
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildQuickActions(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: _actionItems(context)
+      child: _actionItems(context),
     );
   }
 
   Widget _actionItems(BuildContext context) {
-  return Padding(
-    padding: EdgeInsetsGeometry.all(8),
-    child: Row(
-      spacing: 15.0,
-      children: [
-        Expanded(
-    child: SizedBox(
-    height: 50,
-    child: ElevatedButton.icon(
-    onPressed: (){},
-    icon: Icon(Icons.south_west_rounded, color: Colors.white, size: 22),
-    label: Text(
-      "Withdraw",
-      style: TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: 14,
-        letterSpacing: 0.3,
-        color: Colors.white
-      ),
-    ),
-    style: ElevatedButton.styleFrom(
-      backgroundColor: Theme.of(context).colorScheme.primary,
-      foregroundColor: const Color(0xFF404944), // TextVariant color
-      elevation: 0,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: Colors.grey.withValues(alpha: 0.1),
-          width: 1.5,
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: ElevatedButton.icon(
+        onPressed: () {
+          AppBottomSheet.show(
+            context: context,
+            title: "Withdraw Funds",
+            child: const WithdrawSheet(),
+          );
+        },
+        icon: const Icon(Icons.south_west_rounded, color: Colors.white, size: 22),
+        label: const Text(
+          "Withdraw",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            letterSpacing: 0.3,
+            color: Colors.white,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: const Color(0xFF404944),
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: Colors.grey.withValues(alpha: 0.1),
+              width: 1.5,
+            ),
+          ),
         ),
       ),
-    ),
-  ),
-  ),
-  ),
-
-  Expanded(
-    child: SizedBox(
-    height: 50,
-    child: ElevatedButton.icon(
-    onPressed: () {},
-    icon: Icon(Icons.sync_alt_rounded, color: Theme.of(context).colorScheme.primary, size: 22),
-    label: Text(
-      'Transfer',
-      style: TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: 14,
-        letterSpacing: 0.3,
-        color: Theme.of(context).colorScheme.primary
-      ),
-    ),
-    style: ElevatedButton.styleFrom(
-      backgroundColor: Colors.white,
-      foregroundColor: const Color(0xFF404944), // TextVariant color
-      elevation: 0,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: Colors.grey.withValues(alpha: 0.1),
-          width: 1.5,
-        ),
-      ),
-    ),
-  ),
-  ),
-  )
-      ],
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildTransactionHeader(BuildContext context) {
     return Padding(
@@ -207,11 +218,21 @@ class WalletScreen extends StatelessWidget {
         children: [
           const Text(
             "Transactions",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFF003527)),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF003527),
+            ),
           ),
           TextButton(
-            onPressed: () { Navigator.pushNamed(context, '/wallet/transactions'); },
-            child: const Text("See Transaction History", style: TextStyle(color: Color(0xFF235F23), fontWeight: FontWeight.bold)),
+            onPressed: () => Navigator.pushNamed(context, '/wallet/transactions'),
+            child: const Text(
+              "See All",
+              style: TextStyle(
+                color: Color(0xFF235F23),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -219,19 +240,25 @@ class WalletScreen extends StatelessWidget {
   }
 
   Widget _buildTransactionList(BuildContext context) {
-    // final transactions = MockData.fakeTransactions.take(4).toList();
+    final currentUser = context.watch<UserProvider>().currentUser;
 
-    final userProvider = context.watch<UserProvider>();
-    final currentUser = userProvider.currentUser;
+    // ✅ safe — no force unwrap
+    final List<Transaction> transactions =
+        currentUser?.transactions?.take(4).toList() ?? [];
 
-    final List<Transaction>? transactions = currentUser?.transactions?.take(4).toList();
-
-    if(transactions!.isEmpty){
-      return Center(
-        child: Text('No Recorded Transactions'),
+    if (transactions.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(
+          child: Text(
+            'No recorded transactions',
+            style: TextStyle(color: Colors.blueGrey),
+          ),
+        ),
       );
-    } else {
-      return ListView.separated(
+    }
+
+    return ListView.separated(
       shrinkWrap: true,
       padding: const EdgeInsets.symmetric(horizontal: 20),
       physics: const NeverScrollableScrollPhysics(),
@@ -254,7 +281,8 @@ class WalletScreen extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: (isCredit ? Colors.green : Colors.red).withValues(alpha: 0.1),
+                  color: (isCredit ? Colors.green : Colors.red)
+                      .withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -270,7 +298,10 @@ class WalletScreen extends StatelessWidget {
                   children: [
                     Text(
                       tx.description,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
                     ),
                     Text(
                       formatSmartDate(tx.createdAt),
@@ -292,6 +323,5 @@ class WalletScreen extends StatelessWidget {
         );
       },
     );
-    }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -15,6 +16,7 @@ import 'package:wephco_brokerage/screens/leads/add_lead.dart';
 import 'package:wephco_brokerage/models/bank_info.dart';
 import 'package:wephco_brokerage/models/bank.dart';
 
+
 // Providers
 import './providers/user_provider.dart';
 import './providers/property_provider.dart';
@@ -22,9 +24,11 @@ import './providers/leads_provider.dart';
 
 // Services
 import 'package:wephco_brokerage/services/hive_service.dart';
+import 'package:wephco_brokerage/services/notification_service.dart';
 
 // Config
-import 'firebase_options.dart';
+import 'package:wephco_brokerage/firebase_options.dart';
+import 'package:wephco_brokerage/utils/navigator_key.dart';
 
 // Screens
 import 'package:wephco_brokerage/screens/splash_screen.dart';
@@ -65,6 +69,10 @@ void main() async {
     // providerAndroid: AndroidAppCheckProvider
   );
 
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  
+  await NotificationService.instance.initialize();
+
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
 
   runApp(
@@ -77,6 +85,8 @@ void main() async {
       child: const MyApp()
     )
   );
+
+  await NotificationService.instance.handleInitialMessage();
 }
 
 class MyApp extends StatelessWidget {
@@ -89,12 +99,13 @@ class MyApp extends StatelessWidget {
       title: 'Wephco Brokerage',
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: .fromSeed(
+        colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF064E3B),
           primary: const Color(0xFF064E3B),
           secondary: const Color(0xFFC5A059)
         ),
       ),
+      navigatorKey: navigatorKey,
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),

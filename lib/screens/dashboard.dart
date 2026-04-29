@@ -94,11 +94,11 @@ class HomeScreen extends StatelessWidget {
               ),
             ],
           ),
-          // const CircleAvatar(
-          //   radius: 28,
-          //   backgroundColor: Colors.grey,
-          //   child: Icon(Icons.person),
-          // ),
+          const CircleAvatar(
+            radius: 28,
+            backgroundColor: Colors.white,
+            child: Icon(Icons.person),
+          ),
         ],
       ),
     );
@@ -289,11 +289,8 @@ class HomeScreen extends StatelessWidget {
   Widget _propertyActionButtons(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Row(
-        children: [
-          // 1. Find Property Button (Dark Emerald Green)
-          Expanded(
-            child: SizedBox(
+      child: SizedBox(
+        width: double.infinity,
               height: 58, // Increased height for a more premium feel
               child: ElevatedButton(
                 onPressed: () {
@@ -318,53 +315,6 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
             ),
-          ),
-          
-          const SizedBox(width: 12), // Spacing between buttons
-
-          // 2. Add Property Button (Modern White/Outlined)
-          Expanded(
-            child: SizedBox(
-              height: 58,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/properties/new');
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: const Color(0xFF003527), // Deep green text
-                  elevation: 0,
-                  side: BorderSide(
-                    color: Colors.grey.withValues(alpha: 0.2), 
-                    width: 1.5,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(
-                      Icons.add_circle_outline_rounded, 
-                      size: 22,
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      "Add Property",
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

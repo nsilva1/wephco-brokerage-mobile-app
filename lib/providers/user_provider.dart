@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide UserInfo;
+import 'package:wephco_brokerage/services/notification_service.dart';
 import '../services/hive_service.dart';
 import '../models/user.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -20,7 +21,7 @@ class UserProvider extends ChangeNotifier {
   UserInfo? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   bool get isAuthLoading => _isAuthLoading;
-  Future<void> get logout => _handleLogout();
+  
 
   UserProvider() {
     _currentUser = HiveService.instance.currentUser;
@@ -95,6 +96,7 @@ class UserProvider extends ChangeNotifier {
       // 2. Sync their Firestore profile to Hive (Reuse our existing logic)
       if (credential.user != null) {
         await syncUserWithFirestore(credential.user!.uid);
+        await NotificationService.instance.initialize();
       }
       
       return null; // Return null if there's no error (Success)
@@ -131,6 +133,19 @@ class UserProvider extends ChangeNotifier {
     await HiveService.instance.clearAll();
     _currentUser = null;
     notifyListeners();
+  }
+
+  Future<void> logout() async {
+    _setAuthLoading(true);
+  try {
+    await NotificationService.instance.clearToken();
+    await _authService.signOut();
+    await _handleLogout();
+  } catch (e) {
+    await _handleLogout();
+  } finally {
+    _setAuthLoading(false);
+  }
   }
 
   void _setLoading(bool value) {
@@ -235,6 +250,71 @@ Future<String?> submitBankInfo({
     return null;
   } on FirebaseException catch (e) {
     return e.message ?? "Failed to save bank info.";
+  } catch (e) {
+    return "An unexpected error occurred.";
+  } finally {
+    _setLoading(false);
+  }
+}
+
+Future<String?> requestWithdrawal(double amount) async {
+  _setLoading(true);
+  try {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return "User not authenticated.";
+    if (_currentUser == null) return "User not authenticated.";
+
+    final balance = _currentUser!.wallet.availableBalance;
+    if (amount > balance) return "Insufficient balance.";
+
+    final bankInfo = _currentUser!.bankInfo;
+    if (bankInfo == null || bankInfo.bankAccountNumber == null) {
+      return "Please add your bank account before withdrawing.";
+    }
+
+    // 1. Use a batch so both writes succeed or both fail
+    final batch = _db.batch();
+    final withdrawalRef = _db.collection('withdrawals').doc();
+
+    // 2. Write the withdrawal request
+    batch.set(withdrawalRef, {
+      'transactionId': withdrawalRef.id,
+      'userId': uid,
+      'amount': amount,
+      'bankName': bankInfo.bankName,
+      'bankCode': bankInfo.bankCode,
+      'accountNumber': bankInfo.bankAccountNumber,
+      'accountName': bankInfo.bankAccountName,
+      'status': 'pending',
+      'createdAt': FieldValue.serverTimestamp(),
+      'approvedAt': null,
+      'approvedBy': null,
+      'rejectedAt': null,
+      'rejectedReason': null,
+    });
+
+    // 3. Escrow the amount on the user's wallet
+    final userRef = _db.collection('users').doc(uid);
+    batch.update(userRef, {
+      'wallet.availableBalance': FieldValue.increment(-amount),
+      'wallet.escrowBalance': FieldValue.increment(amount),
+    });
+
+    await batch.commit();
+
+    // 4. Update local state
+    _currentUser = _currentUser!.copyWith(
+      wallet: _currentUser!.wallet.copyWith(
+        availableBalance: balance - amount,
+        escrowBalance: (_currentUser!.wallet.escrowBalance) + amount,
+      ),
+    );
+
+    await HiveService.instance.saveUser(_currentUser!);
+    notifyListeners();
+    return null;
+  } on FirebaseException catch (e) {
+    return e.message ?? "Failed to submit withdrawal.";
   } catch (e) {
     return "An unexpected error occurred.";
   } finally {

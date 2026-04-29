@@ -28,4 +28,18 @@ class WalletInfo extends HiveObject {
       currency: map['currency'] ?? 'USD',
     );
   }
+
+  WalletInfo copyWith({
+    double? availableBalance,
+    double? escrowBalance,
+    double? totalEarnings,
+    String? currency,
+  }) {
+    return WalletInfo(
+      availableBalance: availableBalance ?? this.availableBalance,
+      escrowBalance: escrowBalance ?? this.escrowBalance,
+      totalEarnings: totalEarnings ?? this.totalEarnings,
+      currency: currency ?? this.currency,
+    );
+  }
 }
