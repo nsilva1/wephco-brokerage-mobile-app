@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:wephco_brokerage/utils/helper_functions.dart';
 import '../../models/lead.dart';
 import '../../providers/leads_provider.dart';
+import '../../providers/property_provider.dart';
 
 class LeadDetailScreen extends StatefulWidget {
   final Lead lead;
@@ -98,6 +99,9 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final statusColor = _statusColors[_lead.status] ?? Colors.blueGrey;
+    final property = _lead.propertyId != null 
+              ? context.read<PropertyProvider>().getPropertyById(_lead.propertyId!) 
+              : null;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -151,9 +155,9 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
               title: "Property Interest",
               icon: Icons.home_outlined,
               children: [
-                _infoRow("Property", _lead.propertyId ?? 'Not assigned'),
+                _infoRow("Property", property?.title ?? 'Not assigned'),
                 _divider(),
-                _infoRow("Budget", formatCurrency(_lead.budget!, compact: false)),
+                _infoRow("Budget", formatCurrency(_lead.budget!, compact: false, currency: _lead.currency!)),
               ],
             ),
             const SizedBox(height: 16),

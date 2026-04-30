@@ -4,6 +4,7 @@ import '../models/property.dart';
 import '../models/transaction.dart';
 import '../models/user.dart';
 import '../models/wallet.dart';
+import '../models/user_settings.dart';
 
 class HiveService {
   // Private constructor
@@ -21,7 +22,8 @@ class HiveService {
   late Box<Lead> leadBox;
   late Box<Transaction> transactionBox;
   late Box<WalletInfo> walletBox;
-
+  late Box<UserSettings> userSettingsBox;
+  
   // Initialize everything
   Future<void> init() async {
     // await Hive.initFlutter();
@@ -32,12 +34,18 @@ class HiveService {
     leadBox = await Hive.openBox<Lead>('leadBox');
     transactionBox = await Hive.openBox<Transaction>('transactionBox');
     walletBox = await Hive.openBox<WalletInfo>('walletBox');
+    userSettingsBox = await Hive.openBox<UserSettings>('userSettingsBox');
   }
 
   UserInfo? get currentUser => userBox.get('current_session');
+  UserSettings get settings => userSettingsBox.get('settings') ?? UserSettings();
 
   Future<void> saveUser(UserInfo user) async {
     await userBox.put('current_session', user);
+  }
+
+  Future<void> saveSettings(UserSettings settings) async {
+    await userSettingsBox.put('settings', settings);
   }
 
   Future<void> saveAllProperties(List<Property> properties) async {
@@ -58,5 +66,8 @@ class HiveService {
     await userBox.clear();
     await propertyBox.clear();
     await leadBox.clear();
+    await transactionBox.clear();
+    await walletBox.clear();
+    await userSettingsBox.clear();
   }
 }

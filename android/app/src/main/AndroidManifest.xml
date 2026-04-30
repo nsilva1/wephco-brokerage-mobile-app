@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="wephco_brokerage"
+        android:label="Wephco Brokerage"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

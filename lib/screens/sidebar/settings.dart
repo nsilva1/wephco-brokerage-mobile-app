@@ -39,6 +39,24 @@ class SettingsScreen extends StatelessWidget {
                 Navigator.pushNamed(context, '/kyc');
               }, // navigate to KYC screen
             ),
+            _divider(),
+            _settingsTile(
+              context,
+              icon: Icons.fingerprint,
+              label: "Biometric Login",
+              trailing: Switch(
+              value: false,
+              // value: context.watch<UserProvider>().isBiometricEnabled,
+              onChanged: (val) async {
+                // if (val) {
+                //   _showReEnterPasswordSheet(context);
+                // } else {
+                //   await context.read<UserProvider>().setBiometric(false);
+                //   await context.read<UserProvider>().disableBiometric();
+                // }
+              },
+              activeThumbColor: Theme.of(context).primaryColor,
+            ),)
           ]),
           const SizedBox(height: 20),
 
@@ -50,8 +68,10 @@ class SettingsScreen extends StatelessWidget {
               icon: Icons.notifications_outlined,
               label: "Push Notifications",
               trailing: Switch(
-                value: true,
-                onChanged: (val) {},
+                value: context.watch<UserProvider>().settings.pushNotificationsEnabled,
+                onChanged: (val) {
+                  context.read<UserProvider>().setPushNotifications(val);
+                },
                 activeThumbColor: Theme.of(context).primaryColor,
               ),
             ),
@@ -61,8 +81,10 @@ class SettingsScreen extends StatelessWidget {
               icon: Icons.email_outlined,
               label: "Email Notifications",
               trailing: Switch(
-                value: false,
-                onChanged: (val) {},
+                value: context.watch<UserProvider>().settings.emailNotificationsEnabled,
+                onChanged: (val) {
+                  context.read<UserProvider>().setEmailNotifications(val);
+                },
                 activeThumbColor: Theme.of(context).primaryColor,
               ),
             ),
@@ -206,7 +228,8 @@ class SettingsScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
-              await Provider.of<UserProvider>(ctx, listen: false).logout;
+              await Provider.of<UserProvider>(ctx, listen: false).logout();
+              if(!context.mounted) return;
               Navigator.pushNamedAndRemoveUntil(ctx, '/login', (route) => false);
             },
             style: ElevatedButton.styleFrom(

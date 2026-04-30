@@ -15,6 +15,7 @@ import 'package:wephco_brokerage/models/wallet.dart';
 import 'package:wephco_brokerage/screens/leads/add_lead.dart';
 import 'package:wephco_brokerage/models/bank_info.dart';
 import 'package:wephco_brokerage/models/bank.dart';
+import 'package:wephco_brokerage/models/user_settings.dart';
 
 
 // Providers
@@ -61,6 +62,7 @@ void main() async {
   Hive.registerAdapter(WalletInfoAdapter());
   Hive.registerAdapter(BankInfoAdapter());
   Hive.registerAdapter(BankAdapter());
+  Hive.registerAdapter(UserSettingsAdapter());
 
   // Initialise Hive instance
   await HiveService.instance.init();

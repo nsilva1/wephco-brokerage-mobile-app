@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide UserInfo;
+import 'package:wephco_brokerage/models/user_settings.dart';
 import 'package:wephco_brokerage/services/notification_service.dart';
 import '../services/hive_service.dart';
 import '../models/user.dart';
@@ -16,15 +17,17 @@ class UserProvider extends ChangeNotifier {
   bool _isLoading = false;
   final AuthService _authService = AuthService();
   bool _isAuthLoading = false;
+  UserSettings _settings = UserSettings();
 
   // Getters
   UserInfo? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   bool get isAuthLoading => _isAuthLoading;
-  
+  UserSettings get settings => _settings;
 
   UserProvider() {
     _currentUser = HiveService.instance.currentUser;
+    _settings = HiveService.instance.settings;
 
     _auth.authStateChanges().listen((User? user) {
       if (user != null){
@@ -132,6 +135,7 @@ class UserProvider extends ChangeNotifier {
   Future<void> _handleLogout() async {
     await HiveService.instance.clearAll();
     _currentUser = null;
+    _settings = UserSettings();
     notifyListeners();
   }
 
@@ -320,5 +324,23 @@ Future<String?> requestWithdrawal(double amount) async {
   } finally {
     _setLoading(false);
   }
+}
+
+Future<void> setPushNotifications(bool value) async {
+  _settings.pushNotificationsEnabled = value;
+  await HiveService.instance.saveSettings(_settings);
+  notifyListeners();
+}
+
+Future<void> setEmailNotifications(bool value) async {
+  _settings.emailNotificationsEnabled = value;
+  await HiveService.instance.saveSettings(_settings);
+  notifyListeners();
+}
+
+Future<void> setBiometric(bool value) async {
+  _settings.biometricEnabled = value;
+  await HiveService.instance.saveSettings(_settings);
+  notifyListeners();
 }
 }
