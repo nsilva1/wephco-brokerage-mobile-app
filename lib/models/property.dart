@@ -16,7 +16,7 @@ class Property extends HiveObject {
   @HiveField(4)
   final double price;
   @HiveField(5)
-  final double? yieldValue; // 'yield' is a reserved keyword in Dart
+  final double? yieldValue;
   @HiveField(6)
   final String status;
   @HiveField(7)
@@ -27,6 +27,16 @@ class Property extends HiveObject {
   final DateTime? createdAt;
   @HiveField(10)
   final String currency;
+  @HiveField(11)
+  final String tag;
+  @HiveField(12)
+  final String pdfUrl;
+  @HiveField(13)
+  final DateTime? updatedAt;
+  @HiveField(14)
+  final String category;
+  @HiveField(15)
+  final bool verified;
 
   Property({
     this.id,
@@ -40,6 +50,11 @@ class Property extends HiveObject {
     required this.image,
     this.createdAt,
     required this.currency,
+    required this.tag,
+    required this.pdfUrl,
+    this.updatedAt,
+    required this.category,
+    required this.verified,
   });
 
   factory Property.fromMap(Map<String, dynamic> map, [String? docId]) {
@@ -57,6 +72,51 @@ class Property extends HiveObject {
       createdAt: map['createdAt'] is Timestamp 
         ? (map['createdAt'] as Timestamp).toDate() 
         : null,
+      tag: map['tag'] ?? '',
+      pdfUrl: map['pdfUrl'] ?? '',
+      updatedAt: map['updatedAt'] is Timestamp 
+        ? (map['updatedAt'] as Timestamp).toDate() 
+        : null,
+        category: map['category'] ?? '',
+        verified: map['verified'] ?? false,
+    );
+  }
+
+  Property copyWith({
+    String? id,
+    String? title,
+    String? developer,
+    String? location,
+    double? price,
+    double? yieldValue,
+    String? status,
+    String? description,
+    String? image,
+    DateTime? createdAt,
+    String? currency,
+    String? tag,
+    String? pdfUrl,
+    DateTime? updatedAt,
+    String? category,
+    bool? verified,
+  }) {
+    return Property(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      developer: developer ?? this.developer,
+      location: location ?? this.location,
+      price: price ?? this.price,
+      yieldValue: yieldValue ?? this.yieldValue,
+      status: status ?? this.status,
+      description: description ?? this.description,
+      image: image ?? this.image,
+      createdAt: createdAt ?? this.createdAt,
+      currency: currency ?? this.currency,
+      tag: tag ?? this.tag,
+      pdfUrl: pdfUrl ?? this.pdfUrl,
+      updatedAt: updatedAt ?? this.updatedAt,
+      category: category ?? this.category,
+      verified: verified ?? this.verified,
     );
   }
 }

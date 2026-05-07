@@ -47,6 +47,7 @@ import 'package:wephco_brokerage/screens/auth/change_password.dart';
 import 'package:wephco_brokerage/screens/support/support_screen.dart';
 import 'package:wephco_brokerage/screens/support/faq.dart';
 import 'package:wephco_brokerage/screens/support/privacy_policy_screen.dart';
+import 'package:wephco_brokerage/screens/properties/add_property.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -125,6 +126,7 @@ class MyApp extends StatelessWidget {
         '/properties': (context) => const AuthGuard(child: MainLayout(initialIndex: 2,)),
         '/wallet': (context) => const AuthGuard(child: MainLayout(initialIndex: 3,)),
         '/properties/detail': (context) => const AuthGuard(child: PropertyDetails()),
+        '/properties/add': (context) => const AuthGuard(child: AddPropertyScreen()),
         '/leads/new': (context) => const AuthGuard(child: AddLeadScreen()),
         '/wallet/transactions': (context) => const AuthGuard(child: WalletTransactionHistory()),
         '/kyc': (context) => const AuthGuard(child: KYCScreen()),

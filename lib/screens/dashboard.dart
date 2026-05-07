@@ -287,34 +287,60 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _propertyActionButtons(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: SizedBox(
-        width: double.infinity,
-              height: 58, // Increased height for a more premium feel
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/properties');
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF06220E), // Brand dark emerald
-                  foregroundColor: Colors.white,
-                  elevation: 2,
-                  shadowColor: Colors.black.withValues(alpha: 0.2),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+    child: Row(
+      children: [
+        Expanded(
+          child: SizedBox(
+            height: 58,
+            child: ElevatedButton(
+              onPressed: () => Navigator.pushNamed(context, '/properties'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF06220E),
+                foregroundColor: Colors.white,
+                elevation: 2,
+                shadowColor: Colors.black.withValues(alpha: 0.2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Text(
-                  "Find Property",
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
-                  ),
+              ),
+              child: const Text(
+                "Find Property",
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.5,
                 ),
               ),
             ),
-    );
-  }
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: SizedBox(
+            height: 58,
+            child: OutlinedButton(
+              onPressed: () => Navigator.pushNamed(context, '/properties/add'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF06220E),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: const Text(
+                "Add Property",
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 }

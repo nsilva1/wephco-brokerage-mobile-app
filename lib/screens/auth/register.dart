@@ -65,7 +65,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               DropdownButtonFormField<String>(
                 initialValue: _selectedRole,
                 decoration: const InputDecoration(labelText: "I am an...", border: OutlineInputBorder()),
-                items: ['Agent', 'Investor'].map((role) => DropdownMenuItem(value: role, child: Text(role))).toList(),
+                items: ['Agent', 'Affiliate', 'Referral'].map((role) => DropdownMenuItem(value: role, child: Text(role))).toList(),
                 onChanged: (val) => setState(() => _selectedRole = val!),
               ),
               const SizedBox(height: 20),
