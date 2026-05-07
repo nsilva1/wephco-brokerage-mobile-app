@@ -4,6 +4,7 @@ import 'package:wephco_brokerage/providers/leads_provider.dart';
 import 'package:wephco_brokerage/providers/property_provider.dart';
 import 'package:wephco_brokerage/screens/properties/property_details.dart';
 import '../../utils/helper_functions.dart';
+import '../../models/lead.dart';
 
 class LeadsScreen extends StatefulWidget {
   const LeadsScreen({super.key});
@@ -157,10 +158,17 @@ class _LeadsScreenState extends State<LeadsScreen> {
                         style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
                       ),
                     ),
-                    title: Text(
-                      lead.name ?? 'Unknown Lead',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
-                    ),
+                    title: Row(
+    children: [
+      Expanded(
+        child: Text(
+          lead.name ?? 'Unknown Lead',
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+        ),
+      ),
+      _categoryChip(context, lead), // New Category Chip with Update functionality
+    ],
+  ),
                     subtitle: Text(lead.email ?? 'No email provided'),
                     trailing: const Icon(Icons.chevron_right, color: Colors.grey),
                   ),
@@ -255,4 +263,58 @@ class _LeadsScreenState extends State<LeadsScreen> {
       ),
     );
   }
+
+  Widget _categoryChip(BuildContext context, Lead lead) {
+  // List of your categories
+  final categories = ['Prospect', 'Client', 'Closed',];
+  
+  return PopupMenuButton<String>(
+    onSelected: (String newCategory) async {
+      final error = await context.read<LeadProvider>().updateLeadStatus(lead.id!, newCategory);
+      if (error != null && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      }
+    },
+    itemBuilder: (BuildContext context) {
+      return categories.map((String cat) {
+        return PopupMenuItem<String>(
+          value: cat,
+          child: Text(cat),
+        );
+      }).toList();
+    },
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: _getCategoryColor(lead.status).withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _getCategoryColor(lead.status).withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            lead.status?.toUpperCase() ?? 'NONE',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: _getCategoryColor(lead.status),
+            ),
+          ),
+          const Icon(Icons.arrow_drop_down, size: 14, color: Colors.blueGrey),
+        ],
+      ),
+    ),
+  );
+}
+
+// Helper to color-code categories
+Color _getCategoryColor(String? category) {
+  switch (category?.toLowerCase()) {
+    case 'prospect': return Colors.blue;
+    case 'client': return Colors.orange;
+    case 'closed': return Colors.purple;
+    default: return Colors.grey;
+  }
+}
 }

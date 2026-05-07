@@ -27,6 +27,13 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
   String _selectedCurrency = 'NGN';
   String? _selectedPropertyId;
   bool _isSubmitting = false;
+  String _selectedCategory = '';
+
+  static const List<String> _leadCategories = [
+    'Prospect',
+    'Client',
+    'Closed',
+  ];
 
   @override
   void dispose() {
@@ -58,7 +65,7 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
       propertyId: _selectedPropertyId!,
       budget: double.tryParse(_budgetController.text) ?? 0.0,
       source: _sourceController.text.trim(),
-      status: 'New Lead',
+      status:  _selectedCategory.isNotEmpty ? _selectedCategory : 'Prospect',
       createdAt: DateTime.now(),
       currency: _selectedCurrency,
     );
@@ -188,10 +195,25 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
               ),
               const SizedBox(height: 20),
 
-              _buildTextField(
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
                 label: "Lead Source (e.g. WhatsApp, Referral)",
                 controller: _sourceController,
                 icon: Icons.share_outlined,
+              ),
+                  ),
+                  Expanded(
+                    child: _buildDropdown<String>(
+                      label: "Category",
+                      value: _selectedCategory.isEmpty ? null : _selectedCategory,
+                      hint: "Select category",
+                      items: _leadCategories,
+                      onChanged: (v) => setState(() => _selectedCategory = v!),
+                    ),
+                  )
+                ],
               ),
               const SizedBox(height: 40),
 
