@@ -37,6 +37,8 @@ class Property extends HiveObject {
   final String category;
   @HiveField(15)
   final bool verified;
+  @HiveField(16)
+  final List<String> interests;
 
   Property({
     this.id,
@@ -55,6 +57,7 @@ class Property extends HiveObject {
     this.updatedAt,
     required this.category,
     required this.verified,
+    this.interests = const [],
   });
 
   factory Property.fromMap(Map<String, dynamic> map, [String? docId]) {
@@ -79,6 +82,7 @@ class Property extends HiveObject {
         : null,
         category: map['category'] ?? '',
         verified: map['verified'] ?? false,
+        interests: List<String>.from(map['interests'] ?? []),
     );
   }
 
@@ -99,6 +103,7 @@ class Property extends HiveObject {
     DateTime? updatedAt,
     String? category,
     bool? verified,
+    List<String>? interests,
   }) {
     return Property(
       id: id ?? this.id,
@@ -117,6 +122,7 @@ class Property extends HiveObject {
       updatedAt: updatedAt ?? this.updatedAt,
       category: category ?? this.category,
       verified: verified ?? this.verified,
+      interests: interests ?? this.interests,
     );
   }
 }

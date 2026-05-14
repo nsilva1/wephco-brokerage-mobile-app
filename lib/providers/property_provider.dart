@@ -19,11 +19,7 @@ class PropertyProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   PropertyProvider() {
-    // 1. Load from Hive immediately so the screen isn't empty
-    // _properties = HiveService.instance.allCachedProperties;
     _properties = HiveService.instance.allCachedProperties;
-    
-    // 2. Fetch fresh data from Firestore
     fetchProperties();
   }
 
@@ -80,14 +76,68 @@ class PropertyProvider extends ChangeNotifier {
     }).toList();
   }
 
-  // Returns a property by its ID from the currently loaded list
-Property? getPropertyById(String id) {
-  try {
-    return _properties.firstWhere((p) => p.id == id);
-  } catch (_) {
-    return null;
+  // Returns all properties where [userId] has starred (is in interests list).
+  List<Property> starredProperties(String userId) {
+    return _properties
+        .where((p) => p.verified && p.interests.contains(userId))
+        .toList();
   }
-}
+
+  // Toggles the star/interest for [userId] on [propertyId].
+  /// Returns an error string on failure, or null on success.
+  Future<String?> toggleInterest({
+    required String propertyId,
+    required String userId,
+  }) async {
+    final index = _properties.indexWhere((p) => p.id == propertyId);
+    if (index == -1) return "Property not found.";
+ 
+    final property = _properties[index];
+    final alreadyStarred = property.interests.contains(userId);
+ 
+    // Optimistically update local state first for instant UI feedback
+    final updatedInterests = List<String>.from(property.interests);
+    if (alreadyStarred) {
+      updatedInterests.remove(userId);
+    } else {
+      updatedInterests.add(userId);
+    }
+ 
+    _properties[index] = property.copyWith(interests: updatedInterests);
+    notifyListeners();
+ 
+    try {
+      // Use Firestore arrayUnion / arrayRemove for safe concurrent updates
+      await _db.collection('properties').doc(propertyId).update({
+        'interests': alreadyStarred
+            ? FieldValue.arrayRemove([userId])
+            : FieldValue.arrayUnion([userId]),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+ 
+      // Persist updated cache
+      await HiveService.instance.saveAllProperties(_properties);
+      return null;
+    } on FirebaseException catch (e) {
+      // Roll back on failure
+      _properties[index] = property;
+      notifyListeners();
+      return e.message ?? "Failed to update interest.";
+    } catch (e) {
+      _properties[index] = property;
+      notifyListeners();
+      return "An unexpected error occurred.";
+    }
+  }
+
+  // Returns a property by its ID from the currently loaded list
+  Property? getPropertyById(String id) {
+    try {
+      return _properties.firstWhere((p) => p.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
 
   void updateSearch(String query) {
     _searchQuery = query;

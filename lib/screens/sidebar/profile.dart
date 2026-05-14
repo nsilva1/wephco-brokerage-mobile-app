@@ -101,6 +101,8 @@ class ProfileScreen extends StatelessWidget {
                       _infoRow(Icons.email_outlined, "Email", user?.email ?? '—'),
                       _divider(),
                       _infoRow(Icons.calendar_today_outlined, "Member Since", user?.createdAt?.split(' ')[0] ?? '—'),
+                      // _divider(),
+                      // _infoRow(Icons.location_on_outlined, "Location", user?.location ?? '—'),
                     ],
                   ),
                   const SizedBox(height: 16),

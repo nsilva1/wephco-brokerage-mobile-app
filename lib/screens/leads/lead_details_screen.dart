@@ -157,6 +157,8 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
               children: [
                 _infoRow("Property", property?.title ?? 'Not assigned'),
                 _divider(),
+                _infoRow("Location", property?.location ?? '—'),
+                _divider(),
                 _infoRow("Budget", formatCurrency(_lead.budget!, compact: false, currency: _lead.currency!)),
               ],
             ),

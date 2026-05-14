@@ -29,13 +29,14 @@ class LeadAdapter extends TypeAdapter<Lead> {
       createdAt: fields[9] as DateTime?,
       currency: fields[10] as String?,
       notes: fields[11] as String?,
+      occupation: fields[12] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Lead obj) {
     writer
-      ..writeByte(12)
+      ..writeByte(13)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -59,7 +60,9 @@ class LeadAdapter extends TypeAdapter<Lead> {
       ..writeByte(10)
       ..write(obj.currency)
       ..writeByte(11)
-      ..write(obj.notes);
+      ..write(obj.notes)
+      ..writeByte(12)
+      ..write(obj.occupation);
   }
 
   @override

@@ -29,6 +29,8 @@ class Lead extends HiveObject {
   final String? currency;
   @HiveField(11)
   final String? notes;
+  @HiveField(12)
+  final String? occupation;
 
   Lead({
     this.id,
@@ -43,6 +45,7 @@ class Lead extends HiveObject {
     required this.createdAt,
     required this.currency,
     this.notes,
+    this.occupation,
   });
 
   factory Lead.fromMap(Map<String, dynamic> map, [String? docId]) {
@@ -61,6 +64,7 @@ class Lead extends HiveObject {
         ? (map['createdAt'] as Timestamp).toDate() 
         : null,
       notes: map['notes'] ?? '',
+      occupation: map['occupation'] ?? '',
     );
   }
 
@@ -77,6 +81,7 @@ class Lead extends HiveObject {
     'createdAt': createdAt,
     'currency' : currency,
     'notes': notes,
+    'occupation': occupation,
   };
 }
 
@@ -92,6 +97,7 @@ Lead copyWith({
   DateTime? createdAt,
   String? currency,
   String? notes,
+  String? occupation,
 }) {
   return Lead(
     id: id, // ID should not change on copy
@@ -106,6 +112,7 @@ Lead copyWith({
     createdAt: createdAt ?? this.createdAt,
     currency: currency ?? this.currency,
     notes: notes ?? this.notes,
+    occupation: occupation ?? this.occupation,
   );
 }
 }

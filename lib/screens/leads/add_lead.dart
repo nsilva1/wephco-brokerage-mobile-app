@@ -21,7 +21,8 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _budgetController = TextEditingController();
-  final _sourceController = TextEditingController(text: 'Social Media'); // Default
+  final _sourceController = TextEditingController(text: 'Social Media');
+  final _occupationController = TextEditingController();
 
   // State
   String _selectedCurrency = 'NGN';
@@ -42,6 +43,7 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
     _phoneController.dispose();
     _budgetController.dispose();
     _sourceController.dispose();
+    _occupationController.dispose();
     super.dispose();
   }
 
@@ -68,6 +70,7 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
       status:  _selectedCategory.isNotEmpty ? _selectedCategory : 'Prospect',
       createdAt: DateTime.now(),
       currency: _selectedCurrency,
+      occupation: _occupationController.text.trim(),
     );
 
     final success = await context.read<LeadProvider>().addLead(newLead);
@@ -157,6 +160,14 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
                 icon: Icons.phone_outlined,
                 keyboardType: TextInputType.phone,
                 validator: (v) => v!.isEmpty ? "Enter phone number" : null,
+              ),
+              const SizedBox(height: 20),
+
+              _buildTextField(
+                label: "Occupation",
+                controller: _occupationController,
+                icon: Icons.work_outline,
+                validator: (v) => v!.isEmpty ? "Enter occupation" : null,
               ),
               const SizedBox(height: 20),
 
