@@ -25,7 +25,7 @@ class PropertyAdapter extends TypeAdapter<Property> {
       yieldValue: fields[5] as double?,
       status: fields[6] as String,
       description: fields[7] as String,
-      image: fields[8] as String,
+      images: fields[8] as List<String>,
       createdAt: fields[9] as DateTime?,
       currency: fields[10] as String,
       tag: fields[11] as String,
@@ -57,7 +57,7 @@ class PropertyAdapter extends TypeAdapter<Property> {
       ..writeByte(7)
       ..write(obj.description)
       ..writeByte(8)
-      ..write(obj.image)
+      ..write(obj.images)
       ..writeByte(9)
       ..write(obj.createdAt)
       ..writeByte(10)

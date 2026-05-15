@@ -27,29 +27,18 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   String _selectedCurrency = 'NGN';
   String _selectedTag = 'Local';
   String _selectedCategory = 'Sale';
-  File? _selectedImage;
+
+  // Multi-image support
+  final List<File> _selectedImages = [];
+
   File? _selectedPdf;
   String? _selectedPdfName;
   bool _isSubmitting = false;
 
-  static const List<String> _statuses = [
-    'Available',
-    'Under Offer',
-    'Sold',
-  ];
-
+  static const List<String> _statuses = ['Available', 'Under Offer', 'Sold'];
   static const List<String> _currencies = ['NGN', 'USD'];
-
-  static const List<String> _tags = [
-    'Local',
-    'International'
-  ];
-
-  static const List<String> _categories = [
-    'Rent',
-    'Lease',
-    'Sale'
-  ];
+  static const List<String> _tags = ['Local', 'International'];
+  static const List<String> _categories = ['Rent', 'Lease', 'Sale'];
 
   @override
   void dispose() {
@@ -62,15 +51,24 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
+  Future<void> _pickImages() async {
     final picker = ImagePicker();
-    final picked = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-    );
-    if (picked != null) {
-      setState(() => _selectedImage = File(picked.path));
+    final picked = await picker.pickMultiImage(imageQuality: 80);
+    if (picked.isNotEmpty) {
+      setState(() {
+        // Deduplicate: avoid adding the same path twice
+        final existingPaths = _selectedImages.map((f) => f.path).toSet();
+        for (final xFile in picked) {
+          if (!existingPaths.contains(xFile.path)) {
+            _selectedImages.add(File(xFile.path));
+          }
+        }
+      });
     }
+  }
+
+  void _removeImage(int index) {
+    setState(() => _selectedImages.removeAt(index));
   }
 
   Future<void> _pickPdf() async {
@@ -88,10 +86,10 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
 
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedImage == null) {
+    if (_selectedImages.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Please select a property image."),
+          content: Text("Please select at least one property image."),
           backgroundColor: Colors.red,
         ),
       );
@@ -101,7 +99,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     setState(() => _isSubmitting = true);
 
     final error = await context.read<PropertyProvider>().addProperty(
-      imageFile: _selectedImage!,
+      imageFiles: _selectedImages,
       pdfFile: _selectedPdf,
       property: Property(
         title: _titleController.text.trim(),
@@ -113,7 +111,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
             : null,
         status: _selectedStatus,
         description: _descriptionController.text.trim(),
-        image: '',
+        images: const [],  // provider fills these after upload
         currency: _selectedCurrency,
         tag: _selectedTag,
         pdfUrl: '',
@@ -145,10 +143,8 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text(
-          "Add Property",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: const Text("Add Property",
+            style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
@@ -160,66 +156,12 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // — Image Picker —
-              _sectionLabel("Property Image"),
-              GestureDetector(
-                onTap: _pickImage,
-                child: Container(
-                  width: double.infinity,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: _selectedImage != null
-                          ? Theme.of(context).primaryColor
-                          : const Color(0xFFE2E8F0),
-                      width: _selectedImage != null ? 2 : 1.5,
-                    ),
-                  ),
-                  child: _selectedImage != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(15),
-                          child: Image.file(
-                            _selectedImage!,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                          ),
-                        )
-                      : Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.add_photo_alternate_outlined,
-                              size: 48,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              "Tap to select image",
-                              style: TextStyle(
-                                color: Colors.grey[500],
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                ),
-              ),
-              if (_selectedImage != null) ...[
-                const SizedBox(height: 8),
-                TextButton.icon(
-                  onPressed: _pickImage,
-                  icon: const Icon(Icons.refresh, size: 16),
-                  label: const Text("Change Image"),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Theme.of(context).primaryColor,
-                  ),
-                ),
-              ],
+              // ── Image picker ─────────────────────────────────────────────
+              _sectionLabel("Property Images"),
+              _imagePickerSection(),
               const SizedBox(height: 24),
 
-              // — Basic Info —
+              // ── Basic Info ───────────────────────────────────────────────
               _sectionLabel("Basic Information"),
               _card(children: [
                 _textField(
@@ -247,24 +189,21 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
               ]),
               const SizedBox(height: 16),
 
-              // — Pricing —
+              // ── Pricing ──────────────────────────────────────────────────
               _sectionLabel("Pricing"),
               _card(children: [
                 Row(
                   children: [
                     Expanded(
-                      
                       child: _textField(
                         controller: _priceController,
                         label: "Price",
                         icon: Icons.payments_outlined,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
+                        keyboardType:
+                            const TextInputType.numberWithOptions(decimal: true),
                         inputFormatters: [
                           FilteringTextInputFormatter.allow(
-                            RegExp(r'^\d+\.?\d{0,2}'),
-                          ),
+                              RegExp(r'^\d+\.?\d{0,2}')),
                         ],
                         validator: (v) {
                           if (v!.isEmpty) return "Enter price";
@@ -292,19 +231,17 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                   controller: _yieldController,
                   label: "Expected Yield % (optional)",
                   icon: Icons.trending_up_outlined,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(
-                      RegExp(r'^\d+\.?\d{0,2}'),
-                    ),
+                        RegExp(r'^\d+\.?\d{0,2}')),
                   ],
                 ),
               ]),
               const SizedBox(height: 16),
 
-              // — Classification —
+              // ── Classification ───────────────────────────────────────────
               _sectionLabel("Classification"),
               _card(children: [
                 _dropdown(
@@ -331,26 +268,24 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                   icon: Icons.category_outlined,
                 ),
               ]),
-              
               const SizedBox(height: 16),
 
-              // — Description —
+              // ── Description ──────────────────────────────────────────────
               _sectionLabel("Description"),
               _card(children: [
                 TextFormField(
                   controller: _descriptionController,
                   maxLines: 5,
                   decoration: _inputDecoration(
-                    "Describe the property...",
-                    Icons.description_outlined,
-                  ),
+                      "Describe the property...",
+                      Icons.description_outlined),
                   validator: (v) =>
                       v!.isEmpty ? "Enter a description" : null,
                 ),
               ]),
               const SizedBox(height: 16),
 
-              // — Documents —
+              // ── Documents ────────────────────────────────────────────────
               _sectionLabel("Documents (Optional)"),
               _card(children: [
                 GestureDetector(
@@ -399,18 +334,12 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                               _selectedPdf = null;
                               _selectedPdfName = null;
                             }),
-                            child: const Icon(
-                              Icons.close,
-                              size: 18,
-                              color: Colors.blueGrey,
-                            ),
+                            child: const Icon(Icons.close,
+                                size: 18, color: Colors.blueGrey),
                           )
                         else
-                          const Icon(
-                            Icons.chevron_right,
-                            color: Colors.blueGrey,
-                            size: 18,
-                          ),
+                          const Icon(Icons.chevron_right,
+                              color: Colors.blueGrey, size: 18),
                       ],
                     ),
                   ),
@@ -418,7 +347,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
               ]),
               const SizedBox(height: 32),
 
-              // — Submit —
+              // ── Submit ───────────────────────────────────────────────────
               SizedBox(
                 width: double.infinity,
                 height: 56,
@@ -444,9 +373,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                       : const Text(
                           "Add Property",
                           style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                              fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                 ),
               ),
@@ -458,6 +385,153 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     );
   }
 
+  // ── Multi-image picker section ─────────────────────────────────────────────
+  Widget _imagePickerSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Thumbnail row
+        if (_selectedImages.isNotEmpty)
+          SizedBox(
+            height: 110,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _selectedImages.length + 1, // +1 for "add more" tile
+              separatorBuilder: (_, __) => const SizedBox(width: 10),
+              itemBuilder: (context, index) {
+                if (index == _selectedImages.length) {
+                  return _addMoreTile();
+                }
+                return _imageThumbnail(index);
+              },
+            ),
+          )
+        else
+          // Empty state — tap to pick
+          GestureDetector(
+            onTap: _pickImages,
+            child: Container(
+              width: double.infinity,
+              height: 160,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                    color: const Color(0xFFE2E8F0), width: 1.5),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add_photo_alternate_outlined,
+                      size: 48, color: Colors.grey[400]),
+                  const SizedBox(height: 12),
+                  Text(
+                    "Tap to select images",
+                    style:
+                        TextStyle(color: Colors.grey[500], fontSize: 14),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "You can select multiple",
+                    style:
+                        TextStyle(color: Colors.grey[400], fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        if (_selectedImages.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            "${_selectedImages.length} image${_selectedImages.length == 1 ? '' : 's'} selected  •  Tap × to remove",
+            style: TextStyle(color: Colors.grey[500], fontSize: 12),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _imageThumbnail(int index) {
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.file(
+            _selectedImages[index],
+            width: 110,
+            height: 110,
+            fit: BoxFit.cover,
+          ),
+        ),
+        Positioned(
+          top: 4,
+          right: 4,
+          child: GestureDetector(
+            onTap: () => _removeImage(index),
+            child: Container(
+              width: 22,
+              height: 22,
+              decoration: const BoxDecoration(
+                color: Colors.black54,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.close,
+                  size: 14, color: Colors.white),
+            ),
+          ),
+        ),
+        // "Cover" label on first image
+        if (index == 0)
+          Positioned(
+            bottom: 6,
+            left: 6,
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFF061A0A).withValues(alpha: 0.8),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Text(
+                "Cover",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _addMoreTile() {
+    return GestureDetector(
+      onTap: _pickImages,
+      child: Container(
+        width: 110,
+        height: 110,
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.add_photo_alternate_outlined,
+                size: 28, color: Colors.grey[400]),
+            const SizedBox(height: 4),
+            Text("Add more",
+                style:
+                    TextStyle(fontSize: 11, color: Colors.grey[500])),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
   Widget _sectionLabel(String label) {
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 8),
@@ -490,9 +564,8 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: children,
-      ),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: children),
     );
   }
 
@@ -523,36 +596,42 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     return DropdownButtonFormField<String>(
       initialValue: value,
       items: items
-          .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+          .map((item) =>
+              DropdownMenuItem(value: item, child: Text(item)))
           .toList(),
       onChanged: onChanged,
-      decoration: _inputDecoration(label, icon ?? Icons.arrow_drop_down),
+      decoration:
+          _inputDecoration(label, icon ?? Icons.arrow_drop_down),
     );
   }
 
   InputDecoration _inputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(fontSize: 14, color: Colors.blueGrey),
+      labelStyle:
+          const TextStyle(fontSize: 14, color: Colors.blueGrey),
       floatingLabelStyle:
           TextStyle(color: Theme.of(context).primaryColor),
       prefixIcon: Icon(icon, size: 20),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey[200]!, width: 1.5),
+        borderSide:
+            BorderSide(color: Colors.grey[200]!, width: 1.5),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide:
-            BorderSide(color: Theme.of(context).primaryColor, width: 2),
+        borderSide: BorderSide(
+            color: Theme.of(context).primaryColor, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.red.shade300, width: 1.5),
+        borderSide:
+            BorderSide(color: Colors.red.shade300, width: 1.5),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.red.shade400, width: 2),
+        borderSide:
+            BorderSide(color: Colors.red.shade400, width: 2),
       ),
       filled: true,
       fillColor: const Color(0xFFF8FAFC),

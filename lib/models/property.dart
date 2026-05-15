@@ -22,7 +22,7 @@ class Property extends HiveObject {
   @HiveField(7)
   final String description;
   @HiveField(8)
-  final String image;
+  final List<String> images;
   @HiveField(9)
   final DateTime? createdAt;
   @HiveField(10)
@@ -49,7 +49,7 @@ class Property extends HiveObject {
     this.yieldValue,
     required this.status,
     required this.description,
-    required this.image,
+    required this.images,
     this.createdAt,
     required this.currency,
     required this.tag,
@@ -70,7 +70,7 @@ class Property extends HiveObject {
       yieldValue: map['yield'] != null ? (map['yield'] as num).toDouble() : null,
       status: map['status'] ?? 'New Launch',
       description: map['description'] ?? '',
-      image: map['image'] ?? '',
+      images: List<String>.from(map['images'] ?? []),
       currency: map['currency'] ?? '',
       createdAt: map['createdAt'] is Timestamp 
         ? (map['createdAt'] as Timestamp).toDate() 
@@ -95,7 +95,7 @@ class Property extends HiveObject {
     double? yieldValue,
     String? status,
     String? description,
-    String? image,
+    List<String>? images,
     DateTime? createdAt,
     String? currency,
     String? tag,
@@ -114,7 +114,7 @@ class Property extends HiveObject {
       yieldValue: yieldValue ?? this.yieldValue,
       status: status ?? this.status,
       description: description ?? this.description,
-      image: image ?? this.image,
+      images: images ?? this.images,
       createdAt: createdAt ?? this.createdAt,
       currency: currency ?? this.currency,
       tag: tag ?? this.tag,

@@ -14,7 +14,6 @@ class PropertyProvider extends ChangeNotifier {
   bool _isLoading = false;
   String _searchQuery = "";
 
-  // Getters
   List<Property> get properties => _properties;
   bool get isLoading => _isLoading;
 
@@ -28,34 +27,28 @@ class PropertyProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Fetch from Firestore (ordered by newest first)
-      QuerySnapshot snapshot = await _db
-          .collection('properties').get();
+      final QuerySnapshot snapshot =
+          await _db.collection('properties').get();
 
-      // Convert docs to models
       List<Property> fetched = snapshot.docs.map((doc) {
-        return Property.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+        return Property.fromMap(
+            doc.data() as Map<String, dynamic>, doc.id);
       }).toList();
 
-      // sort fetched properties
       fetched.sort((a, b) {
         final dateA = a.createdAt;
         final dateB = b.createdAt;
-
         if (dateA == null && dateB == null) return 0;
-        if (dateA == null) return 1; // Nulls move to the end
+        if (dateA == null) return 1;
         if (dateB == null) return -1;
-
-        return dateB.compareTo(dateA); // Descending order
+        return dateB.compareTo(dateA);
       });
 
-      // 3. Update Local Cache (Hive)
       await HiveService.instance.saveAllProperties(fetched);
-
-      // 4. Update local state
       _properties = fetched;
     } catch (e, stack) {
-      await FirebaseCrashlytics.instance.recordError(e, stack, reason: 'Property Fetch Failed');
+      await FirebaseCrashlytics.instance
+          .recordError(e, stack, reason: 'Property Fetch Failed');
       debugPrint("Property Fetch Error: $e");
     } finally {
       _isLoading = false;
@@ -63,11 +56,10 @@ class PropertyProvider extends ChangeNotifier {
     }
   }
 
-  // --- Search & Filtering Logic ---
-  
+  // --- Search & Filtering ---
+
   List<Property> get filteredProperties {
     if (_searchQuery.isEmpty) return _properties;
-    
     return _properties.where((p) {
       final title = p.title.toLowerCase();
       final location = p.location.toLowerCase();
@@ -76,14 +68,14 @@ class PropertyProvider extends ChangeNotifier {
     }).toList();
   }
 
-  // Returns all properties where [userId] has starred (is in interests list).
+  /// Returns all verified properties that [userId] has starred.
   List<Property> starredProperties(String userId) {
     return _properties
         .where((p) => p.verified && p.interests.contains(userId))
         .toList();
   }
 
-  // Toggles the star/interest for [userId] on [propertyId].
+  /// Toggles the star/interest for [userId] on [propertyId].
   /// Returns an error string on failure, or null on success.
   Future<String?> toggleInterest({
     required String propertyId,
@@ -91,36 +83,31 @@ class PropertyProvider extends ChangeNotifier {
   }) async {
     final index = _properties.indexWhere((p) => p.id == propertyId);
     if (index == -1) return "Property not found.";
- 
+
     final property = _properties[index];
     final alreadyStarred = property.interests.contains(userId);
- 
-    // Optimistically update local state first for instant UI feedback
+
+    // Optimistic update
     final updatedInterests = List<String>.from(property.interests);
     if (alreadyStarred) {
       updatedInterests.remove(userId);
     } else {
       updatedInterests.add(userId);
     }
- 
     _properties[index] = property.copyWith(interests: updatedInterests);
     notifyListeners();
- 
+
     try {
-      // Use Firestore arrayUnion / arrayRemove for safe concurrent updates
       await _db.collection('properties').doc(propertyId).update({
         'interests': alreadyStarred
             ? FieldValue.arrayRemove([userId])
             : FieldValue.arrayUnion([userId]),
         'updatedAt': FieldValue.serverTimestamp(),
       });
- 
-      // Persist updated cache
       await HiveService.instance.saveAllProperties(_properties);
       return null;
     } on FirebaseException catch (e) {
-      // Roll back on failure
-      _properties[index] = property;
+      _properties[index] = property; // roll back
       notifyListeners();
       return e.message ?? "Failed to update interest.";
     } catch (e) {
@@ -130,7 +117,6 @@ class PropertyProvider extends ChangeNotifier {
     }
   }
 
-  // Returns a property by its ID from the currently loaded list
   Property? getPropertyById(String id) {
     try {
       return _properties.firstWhere((p) => p.id == id);
@@ -141,25 +127,39 @@ class PropertyProvider extends ChangeNotifier {
 
   void updateSearch(String query) {
     _searchQuery = query;
-    notifyListeners(); // Rebuilds the UI as the user types
+    notifyListeners();
   }
 
+  // ── Upload helpers ──────────────────────────────────────────────────────────
+
+  /// Uploads a list of image files and returns their download URLs.
+  Future<List<String>> _uploadImages(
+      List<File> imageFiles, int baseTimestamp) async {
+    final urls = <String>[];
+    for (int i = 0; i < imageFiles.length; i++) {
+      final ref = _storage
+          .ref()
+          .child('properties/images/${baseTimestamp}_$i.jpg');
+      await ref.putFile(imageFiles[i]);
+      urls.add(await ref.getDownloadURL());
+    }
+    return urls;
+  }
+
+  // ── CRUD ────────────────────────────────────────────────────────────────────
+
   Future<String?> addProperty({
-    required File imageFile,
+    required List<File> imageFiles,
     File? pdfFile,
     required Property property,
   }) async {
     try {
       final timestamp = DateTime.now().millisecondsSinceEpoch;
 
-      // 1. Upload image to Firebase Storage
-      final imageRef = _storage
-          .ref()
-          .child('properties/images/$timestamp.jpg');
-      await imageRef.putFile(imageFile);
-      final imageUrl = await imageRef.getDownloadURL();
+      // Upload all images
+      final imageUrls = await _uploadImages(imageFiles, timestamp);
 
-      // 2. Upload PDF if provided
+      // Upload PDF if provided
       String pdfUrl = '';
       if (pdfFile != null) {
         final pdfRef = _storage
@@ -169,7 +169,7 @@ class PropertyProvider extends ChangeNotifier {
         pdfUrl = await pdfRef.getDownloadURL();
       }
 
-      // 3. Write to Firestore
+      // Write to Firestore
       final docRef = await _db.collection('properties').add({
         'title': property.title,
         'developer': property.developer,
@@ -178,19 +178,20 @@ class PropertyProvider extends ChangeNotifier {
         'yield': property.yieldValue,
         'status': property.status,
         'description': property.description,
-        'image': imageUrl,
+        'images': imageUrls,
         'currency': property.currency,
         'tag': property.tag,
         'pdfUrl': pdfUrl,
+        'interests': [],
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      // 4. Update local list
       final newProperty = property.copyWith(
         id: docRef.id,
-        image: imageUrl,
+        images: imageUrls,
         pdfUrl: pdfUrl,
+        interests: [],
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -208,7 +209,7 @@ class PropertyProvider extends ChangeNotifier {
 
   Future<String?> updateProperty({
     required String propertyId,
-    File? newImageFile,
+    List<File>? newImageFiles, // null = keep existing images
     File? newPdfFile,
     required Property property,
   }) async {
@@ -227,16 +228,11 @@ class PropertyProvider extends ChangeNotifier {
         'updatedAt': FieldValue.serverTimestamp(),
       };
 
-      // Upload new image if changed
-      if (newImageFile != null) {
-        final imageRef = _storage
-            .ref()
-            .child('properties/images/$timestamp.jpg');
-        await imageRef.putFile(newImageFile);
-        updates['image'] = await imageRef.getDownloadURL();
+      if (newImageFiles != null && newImageFiles.isNotEmpty) {
+        updates['images'] =
+            await _uploadImages(newImageFiles, timestamp);
       }
 
-      // Upload new PDF if changed
       if (newPdfFile != null) {
         final pdfRef = _storage
             .ref()
@@ -245,16 +241,18 @@ class PropertyProvider extends ChangeNotifier {
         updates['pdfUrl'] = await pdfRef.getDownloadURL();
       }
 
-      // Update Firestore
-      await _db.collection('properties').doc(propertyId).update(updates);
+      await _db
+          .collection('properties')
+          .doc(propertyId)
+          .update(updates);
 
-      // Update local list
       final index = _properties.indexWhere((p) => p.id == propertyId);
       if (index != -1) {
         _properties[index] = property.copyWith(
           id: propertyId,
-          image: updates['image'] ?? property.image,
-          pdfUrl: updates['pdfUrl'] ?? property.pdfUrl,
+          images: (updates['images'] as List<String>?) ??
+              property.images,
+          pdfUrl: (updates['pdfUrl'] as String?) ?? property.pdfUrl,
           updatedAt: DateTime.now(),
         );
         await HiveService.instance.saveAllProperties(_properties);
@@ -284,9 +282,7 @@ class PropertyProvider extends ChangeNotifier {
   }
 
   Future<String?> updatePropertyStatus(
-    String propertyId,
-    String status,
-  ) async {
+      String propertyId, String status) async {
     try {
       await _db.collection('properties').doc(propertyId).update({
         'status': status,
@@ -295,7 +291,8 @@ class PropertyProvider extends ChangeNotifier {
 
       final index = _properties.indexWhere((p) => p.id == propertyId);
       if (index != -1) {
-        _properties[index] = _properties[index].copyWith(status: status);
+        _properties[index] =
+            _properties[index].copyWith(status: status);
         notifyListeners();
         await HiveService.instance.saveAllProperties(_properties);
       }
@@ -309,9 +306,7 @@ class PropertyProvider extends ChangeNotifier {
   }
 
   Future<String?> updatePropertyTag(
-    String propertyId,
-    String tag,
-  ) async {
+      String propertyId, String tag) async {
     try {
       await _db.collection('properties').doc(propertyId).update({
         'tag': tag,

@@ -40,7 +40,6 @@ class _PropertiesScreenState extends State<PropertiesScreen>
         .where((property) => property.verified == true)
         .toList();
 
-    // Read current user ID — adjust to your auth provider's getter
     final currentUserId =
         context.watch<UserProvider>().currentUser?.id ?? '';
 
@@ -60,7 +59,6 @@ class _PropertiesScreenState extends State<PropertiesScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Header + Search ────────────────────────────────────────────
             Padding(
               padding:
                   const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
@@ -77,23 +75,17 @@ class _PropertiesScreenState extends State<PropertiesScreen>
                             .headlineMedium
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
-                      // ── Starred properties shortcut ────────────────────
                       IconButton(
                         tooltip: "Starred Properties",
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => StarredPropertiesScreen(
-                                userId: currentUserId,
-                              ),
-                            ),
-                          );
-                        },
-                        icon: const Icon(
-                          Icons.bookmarks_rounded,
-                          color: Color(0xFF061A0A),
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => StarredPropertiesScreen(
+                                userId: currentUserId),
+                          ),
                         ),
+                        icon: const Icon(Icons.bookmarks_rounded,
+                            color: Color(0xFF061A0A)),
                       ),
                     ],
                   ),
@@ -102,8 +94,6 @@ class _PropertiesScreenState extends State<PropertiesScreen>
                 ],
               ),
             ),
-
-            // ── Tab Bar ────────────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: _buildTabBar(
@@ -111,10 +101,7 @@ class _PropertiesScreenState extends State<PropertiesScreen>
                 internationalCount: internationalProperties.length,
               ),
             ),
-
             const SizedBox(height: 8),
-
-            // ── Tab Views ──────────────────────────────────────────────────
             Expanded(
               child: TabBarView(
                 controller: _tabController,
@@ -130,7 +117,6 @@ class _PropertiesScreenState extends State<PropertiesScreen>
     );
   }
 
-  // ── Custom pill-style tab bar ──────────────────────────────────────────────
   Widget _buildTabBar({
     required int localCount,
     required int internationalCount,
@@ -151,14 +137,10 @@ class _PropertiesScreenState extends State<PropertiesScreen>
         dividerColor: Colors.transparent,
         labelColor: Colors.white,
         unselectedLabelColor: Colors.grey.shade600,
-        labelStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-        ),
-        unselectedLabelStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-        ),
+        labelStyle:
+            const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+        unselectedLabelStyle:
+            const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         tabs: [
           Tab(
             child: Row(
@@ -207,7 +189,6 @@ class _PropertiesScreenState extends State<PropertiesScreen>
     );
   }
 
-  // ── Search input ───────────────────────────────────────────────────────────
   Widget _searchInput() {
     return TextField(
       onChanged: (value) =>
@@ -225,7 +206,6 @@ class _PropertiesScreenState extends State<PropertiesScreen>
     );
   }
 
-  // ── Scrollable list for a tab ──────────────────────────────────────────────
   Widget _propertiesListView(List<Property> properties, String userId) {
     if (properties.isEmpty) {
       return Center(
@@ -249,14 +229,11 @@ class _PropertiesScreenState extends State<PropertiesScreen>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       itemCount: properties.length,
       separatorBuilder: (_, __) => const SizedBox(height: 20),
-      itemBuilder: (context, index) {
-        final property = properties[index];
-        return _propertyCard(property, userId);
-      },
+      itemBuilder: (context, index) =>
+          _propertyCard(properties[index], userId),
     );
   }
 
-  // ── Property card ──────────────────────────────────────────────────────────
   Widget _propertyCard(Property property, String userId) {
     final isStarred = property.interests.contains(userId);
 
@@ -276,26 +253,11 @@ class _PropertiesScreenState extends State<PropertiesScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image Section with Badges
+          // ── Image carousel ─────────────────────────────────────────────
           Stack(
             children: [
-              ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(20)),
-                child: Image.network(
-                  property.image,
-                  height: 200,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    height: 200,
-                    color: Colors.grey.shade200,
-                    child: const Icon(Icons.image_not_supported,
-                        color: Colors.grey),
-                  ),
-                ),
-              ),
-              // Status badge (bottom-left)
+              PropertyImageCarousel(images: property.images, height: 200),
+              // Status badge
               Positioned(
                 top: 16,
                 left: 16,
@@ -303,8 +265,7 @@ class _PropertiesScreenState extends State<PropertiesScreen>
                   padding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
-                    color:
-                        const Color(0xFF333333).withValues(alpha: 0.9),
+                    color: const Color(0xFF333333).withValues(alpha: 0.9),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -317,7 +278,7 @@ class _PropertiesScreenState extends State<PropertiesScreen>
                   ),
                 ),
               ),
-              // ── Star / bookmark button (top-right) ──────────────────────
+              // Star button
               Positioned(
                 top: 12,
                 right: 12,
@@ -330,7 +291,7 @@ class _PropertiesScreenState extends State<PropertiesScreen>
             ],
           ),
 
-          // Content Section
+          // ── Content ────────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
@@ -352,11 +313,8 @@ class _PropertiesScreenState extends State<PropertiesScreen>
                         ),
                       ),
                     ),
-                    const Icon(
-                      Icons.verified_user_rounded,
-                      color: Color(0xFFC8E6C9),
-                      size: 28,
-                    ),
+                    const Icon(Icons.verified_user_rounded,
+                        color: Color(0xFFC8E6C9), size: 28),
                   ],
                 ),
                 Text(
@@ -399,15 +357,13 @@ class _PropertiesScreenState extends State<PropertiesScreen>
                     SizedBox(
                       height: 48,
                       child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => PropertyDetails(
-                                  propertyId: property.id!),
-                            ),
-                          );
-                        },
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PropertyDetails(
+                                propertyId: property.id!),
+                          ),
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF061A0A),
                           foregroundColor: Colors.white,
@@ -421,9 +377,7 @@ class _PropertiesScreenState extends State<PropertiesScreen>
                         child: const Text(
                           "View Details",
                           style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                              fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -438,7 +392,132 @@ class _PropertiesScreenState extends State<PropertiesScreen>
   }
 }
 
-// ── Extracted star button widget (handles its own loading state) ──────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Reusable image carousel (exported so property_details & starred screen reuse it)
+// ─────────────────────────────────────────────────────────────────────────────
+class PropertyImageCarousel extends StatefulWidget {
+  final List<String> images;
+  final double height;
+  final BorderRadius? borderRadius;
+
+  const PropertyImageCarousel({
+    super.key,
+    required this.images,
+    required this.height,
+    this.borderRadius,
+  });
+
+  @override
+  State<PropertyImageCarousel> createState() =>
+      _PropertyImageCarouselState();
+}
+
+class _PropertyImageCarouselState extends State<PropertyImageCarousel> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final images = widget.images;
+    final radius = widget.borderRadius ??
+        const BorderRadius.vertical(top: Radius.circular(20));
+
+    if (images.isEmpty) {
+      return ClipRRect(
+        borderRadius: radius,
+        child: Container(
+          height: widget.height,
+          color: Colors.grey.shade200,
+          child:
+              const Icon(Icons.image_not_supported, color: Colors.grey),
+        ),
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: radius,
+      child: SizedBox(
+        height: widget.height,
+        child: Stack(
+          children: [
+            PageView.builder(
+              controller: _pageController,
+              itemCount: images.length,
+              onPageChanged: (i) => setState(() => _currentPage = i),
+              itemBuilder: (_, i) => Image.network(
+                images[i],
+                height: widget.height,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  height: widget.height,
+                  color: Colors.grey.shade200,
+                  child: const Icon(Icons.image_not_supported,
+                      color: Colors.grey),
+                ),
+              ),
+            ),
+            // Dot indicators
+            if (images.length > 1)
+              Positioned(
+                bottom: 10,
+                left: 0,
+                right: 0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    images.length,
+                    (i) => AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      width: _currentPage == i ? 18 : 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: _currentPage == i
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            // "1 / N" counter pill
+            if (images.length > 1)
+              Positioned(
+                bottom: 10,
+                right: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.55),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${_currentPage + 1}/${images.length}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Star button ────────────────────────────────────────────────────────────────
 class _StarButton extends StatefulWidget {
   final String propertyId;
   final String userId;
@@ -480,11 +559,8 @@ class _StarButtonState extends State<_StarButton>
 
   Future<void> _handleTap() async {
     if (_isLoading || widget.userId.isEmpty) return;
-
-    // Play bounce animation
     await _animController.forward();
     _animController.reverse();
-
     setState(() => _isLoading = true);
 
     final error = await context.read<PropertyProvider>().toggleInterest(
@@ -498,9 +574,8 @@ class _StarButtonState extends State<_StarButton>
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(error),
-          backgroundColor: Colors.red.shade700,
-        ),
+            content: Text(error),
+            backgroundColor: Colors.red.shade700),
       );
     }
   }

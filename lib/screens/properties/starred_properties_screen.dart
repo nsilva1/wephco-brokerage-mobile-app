@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:wephco_brokerage/models/property.dart';
 import 'package:wephco_brokerage/providers/property_provider.dart';
 import 'package:wephco_brokerage/screens/properties/property_details.dart';
+import 'package:wephco_brokerage/screens/properties/properties.dart';
 import '../../utils/helper_functions.dart';
 
 class StarredPropertiesScreen extends StatelessWidget {
@@ -12,7 +13,8 @@ class StarredPropertiesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final starred = context.watch<PropertyProvider>().starredProperties(userId);
+    final starred =
+        context.watch<PropertyProvider>().starredProperties(userId);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FB),
@@ -41,25 +43,22 @@ class StarredPropertiesScreen extends StatelessWidget {
         ],
       ),
       body: starred.isEmpty
-          ? _EmptyState()
+          ? const _EmptyState()
           : ListView.separated(
               physics: const BouncingScrollPhysics(),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 16),
               itemCount: starred.length,
               separatorBuilder: (_, __) => const SizedBox(height: 20),
-              itemBuilder: (context, index) {
-                return _StarredPropertyCard(
-                  property: starred[index],
-                  userId: userId,
-                );
-              },
+              itemBuilder: (context, index) => _StarredPropertyCard(
+                property: starred[index],
+                userId: userId,
+              ),
             ),
     );
   }
 }
 
-// ── Count badge in app bar ─────────────────────────────────────────────────
 class _CountBadge extends StatelessWidget {
   final int count;
   const _CountBadge({required this.count});
@@ -84,8 +83,9 @@ class _CountBadge extends StatelessWidget {
   }
 }
 
-// ── Empty state ────────────────────────────────────────────────────────────
 class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -119,7 +119,6 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-// ── Starred property card ──────────────────────────────────────────────────
 class _StarredPropertyCard extends StatefulWidget {
   final Property property;
   final String userId;
@@ -136,7 +135,7 @@ class _StarredPropertyCard extends StatefulWidget {
 class _StarredPropertyCardState extends State<_StarredPropertyCard> {
   bool _isRemoving = false;
 
-  Future<void> _removestar() async {
+  Future<void> _removeStar() async {
     setState(() => _isRemoving = true);
     final error = await context.read<PropertyProvider>().toggleInterest(
           propertyId: widget.property.id!,
@@ -147,9 +146,8 @@ class _StarredPropertyCardState extends State<_StarredPropertyCard> {
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(error),
-          backgroundColor: Colors.red.shade700,
-        ),
+            content: Text(error),
+            backgroundColor: Colors.red.shade700),
       );
     }
   }
@@ -174,25 +172,11 @@ class _StarredPropertyCardState extends State<_StarredPropertyCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image
+          // ── Image carousel ─────────────────────────────────────────────
           Stack(
             children: [
-              ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(20)),
-                child: Image.network(
-                  property.image,
-                  height: 180,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    height: 180,
-                    color: Colors.grey.shade200,
-                    child: const Icon(Icons.image_not_supported,
-                        color: Colors.grey),
-                  ),
-                ),
-              ),
+              PropertyImageCarousel(images: property.images, height: 180),
+              // Status badge
               Positioned(
                 top: 16,
                 left: 16,
@@ -200,8 +184,7 @@ class _StarredPropertyCardState extends State<_StarredPropertyCard> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                    color:
-                        const Color(0xFF333333).withValues(alpha: 0.9),
+                    color: const Color(0xFF333333).withValues(alpha: 0.9),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -214,12 +197,12 @@ class _StarredPropertyCardState extends State<_StarredPropertyCard> {
                   ),
                 ),
               ),
-              // Remove star button
+              // Un-star button
               Positioned(
                 top: 12,
                 right: 12,
                 child: GestureDetector(
-                  onTap: _isRemoving ? null : _removestar,
+                  onTap: _isRemoving ? null : _removeStar,
                   child: Container(
                     width: 40,
                     height: 40,
@@ -242,18 +225,15 @@ class _StarredPropertyCardState extends State<_StarredPropertyCard> {
                               color: Color(0xFF061A0A),
                             ),
                           )
-                        : const Icon(
-                            Icons.bookmark_rounded,
-                            color: Color(0xFF1B5E20),
-                            size: 22,
-                          ),
+                        : const Icon(Icons.bookmark_rounded,
+                            color: Color(0xFF1B5E20), size: 22),
                   ),
                 ),
               ),
             ],
           ),
 
-          // Content
+          // ── Content ────────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -330,8 +310,8 @@ class _StarredPropertyCardState extends State<_StarredPropertyCard> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF061A0A),
                           foregroundColor: Colors.white,
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 20),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -340,9 +320,7 @@ class _StarredPropertyCardState extends State<_StarredPropertyCard> {
                         child: const Text(
                           "View Details",
                           style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
+                              fontSize: 15, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
