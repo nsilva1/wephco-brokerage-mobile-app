@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
 
@@ -14,6 +15,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final List<String> _roles = ['Agent', 'Affiliate', 'Referral'];
+  final _phoneController = TextEditingController();
   String _selectedRole = 'Agent';
 
   void _handleRegister() async {
@@ -23,6 +26,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _passwordController.text.trim(),
         _nameController.text.trim(),
         _selectedRole,
+        _phoneController.text.trim(),
       );
 
       if (error == null) {
@@ -33,6 +37,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
       }
     }
+  }
+
+  String? _validatePhoneNumber(String? value) {
+    if (value == null || value.isEmpty) return "Phone number is required";
+    if (!RegExp(r'^\d{11}$').hasMatch(value)) return "Phone number must be 11 digits";
+    if (!value.startsWith('0')) return "Phone number must start with 0";
+    return null;
   }
 
   @override
@@ -65,7 +76,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               DropdownButtonFormField<String>(
                 initialValue: _selectedRole,
                 decoration: const InputDecoration(labelText: "I am an...", border: OutlineInputBorder()),
-                items: ['Agent', 'Affiliate', 'Referral'].map((role) => DropdownMenuItem(value: role, child: Text(role))).toList(),
+                items: _roles.map((role) => DropdownMenuItem(value: role, child: Text(role))).toList(),
                 onChanged: (val) => setState(() => _selectedRole = val!),
               ),
               const SizedBox(height: 20),
@@ -74,6 +85,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: _emailController,
                 decoration: const InputDecoration(labelText: "Email", border: OutlineInputBorder()),
                 validator: (value) => value!.contains('@') ? null : "Invalid email",
+              ),
+              const SizedBox(height: 20),
+
+              TextFormField(
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(11)],
+                decoration: const InputDecoration(labelText: "Phone", border: OutlineInputBorder(), hintText: "e.g. 08012345678"),
+                validator: _validatePhoneNumber,
               ),
               const SizedBox(height: 20),
 

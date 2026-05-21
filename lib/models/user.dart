@@ -35,6 +35,22 @@ class UserInfo extends HiveObject {
   final String? createdAt;
   @HiveField(10)
   final BankInfo? bankInfo;
+  @HiveField(11)
+  final String? status;
+  @HiveField(12)
+  final String? kycStatus;
+  @HiveField(13)
+  final String? kycFlagReason;
+  @HiveField(14)
+  final String? state;
+  @HiveField(15)
+  final String? city;
+  @HiveField(16)
+  final String? country;
+  @HiveField(17)
+  final String? address;
+  @HiveField(18)
+  final String phone;
 
   UserInfo({
     required this.id,
@@ -48,6 +64,14 @@ class UserInfo extends HiveObject {
     required this.transactions,
     this.createdAt,
     this.bankInfo,
+    this.status,
+    this.kycStatus,
+    this.kycFlagReason,
+    required this.state,
+    required this.city,
+    required this.country,
+    required this.address,
+    required this.phone,
   });
 
   factory UserInfo.fromMap(Map<String, dynamic> map, String docId) {
@@ -69,6 +93,14 @@ class UserInfo extends HiveObject {
       bankInfo: map['bankInfo'] != null 
     ? BankInfo.fromMap(map['bankInfo'] as Map<String, dynamic>) 
     : null,
+      status: map['status'] ?? 'Active',
+      kycStatus: map['kycStatus'] ?? 'pending',
+      kycFlagReason: map['kycFlagReason'] ?? '',
+      state: map['state'] ?? '',
+      city: map['city'] ?? '',
+      country: map['country'] ?? '',
+      address: map['address'] ?? '',
+      phone: map['phone'] ?? '',
     );
   }
 
@@ -81,6 +113,14 @@ class UserInfo extends HiveObject {
     int? dealsClosed,
     WalletInfo? wallet,
     List<Transaction>? transactions,
+    String? status,
+    String? kycStatus,
+    String? kycFlagReason,
+    String? state,
+    String? city,
+    String? country,
+    String? address,
+    String? phone,
     Object? bankInfo = const _Undefined(),
   }) {
     return UserInfo(
@@ -95,6 +135,14 @@ class UserInfo extends HiveObject {
       transactions: transactions ?? this.transactions,
       createdAt: createdAt,
       bankInfo: bankInfo is _Undefined ? this.bankInfo : bankInfo as BankInfo?,
+      status: status ?? this.status,
+      kycStatus: kycStatus ?? this.kycStatus,
+      kycFlagReason: kycFlagReason ?? this.kycFlagReason,
+      state: state ?? this.state,
+      city: city ?? this.city,
+      country: country ?? this.country,
+      address: address ?? this.address,
+      phone: phone ?? this.phone,
     );
   }
 }

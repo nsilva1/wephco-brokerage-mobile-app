@@ -69,7 +69,7 @@ class UserProvider extends ChangeNotifier {
     }
   }
 
-  Future<String?> signUpUser(String email, String password, String name, String role) async {
+  Future<String?> signUpUser(String email, String password, String name, String role, String phone) async {
     _isAuthLoading = true;
     notifyListeners();
 
@@ -78,7 +78,8 @@ class UserProvider extends ChangeNotifier {
         email: email, 
         password: password, 
         name: name, 
-        role: role
+        role: role,
+        phone: phone,
       );
       return null; // Success (No error message)
     } on FirebaseAuthException catch (e) {

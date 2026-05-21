@@ -45,8 +45,8 @@ class _PropertiesScreenState extends State<PropertiesScreen>
 
     final localProperties = allProperties.where((p) {
       final isLocal = p.tag.toLowerCase() == 'local';
-      final isRecent = p.createdAt!.isAfter(oneMonthAgo);
-      return isLocal && isRecent;
+      final isRecent = p.createdAt?.isAfter(oneMonthAgo);
+      return isLocal && isRecent!;
     }).toList();
 
     final internationalProperties = allProperties

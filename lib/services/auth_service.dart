@@ -19,6 +19,7 @@ class AuthService {
     required String password,
     required String name,
     required String role,
+    required String phone,
   }) async {
     // 1. Create the Auth Account
     UserCredential cred = await _auth.createUserWithEmailAndPassword(
@@ -31,6 +32,7 @@ class AuthService {
       'name': name,
       'email': email,
       'role': role,
+      'phone': phone,
       'commission': 0.0,
       'activeLeads': 0,
       'dealsClosed': 0,
@@ -42,7 +44,14 @@ class AuthService {
       },
       'transactions': [],
       'createdAt': DateTime.now().toIso8601String(),
-      'bankInfo': null
+      'bankInfo': null,
+      'status': null,
+      'kycStatus': null,
+      'kycFlagReason': null,
+      'state': null,
+      'city': null,
+      'country': null,
+      'address': null
     });
   }
 
