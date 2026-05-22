@@ -4,7 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:firebase_app_check/firebase_app_check.dart';
+// import 'package:firebase_app_check/firebase_app_check.dart';
 
 // Models
 import 'package:wephco_brokerage/models/lead.dart';
@@ -73,11 +73,11 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  await FirebaseAppCheck.instance.activate(
-    androidProvider: AndroidProvider.playIntegrity,
-    // appleProvider: AppleProvider.appAttest,
-    // providerAndroid: AndroidAppCheckProvider
-  );
+  // await FirebaseAppCheck.instance.activate(
+  //   androidProvider: AndroidProvider.playIntegrity,
+  //   // appleProvider: AppleProvider.appAttest,
+  //   // providerAndroid: AndroidAppCheckProvider
+  // );
 
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   

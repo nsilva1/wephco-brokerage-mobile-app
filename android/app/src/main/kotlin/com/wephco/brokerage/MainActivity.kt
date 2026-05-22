@@ -1,4 +1,4 @@
-package com.example.wephco_brokerage
+package com.wephco.brokerage
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -48,6 +48,42 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1044655429742:android:6a871d1e8d3296b8e1ee7f",
+        "android_client_info": {
+          "package_name": "com.wephco.brokerage"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1044655429742-p939r573f5pevjgvpvepg6b6rqdhgq19.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBhgZQYslZGRiiB7b3yiFCTQEMFP57rxl8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1044655429742-p939r573f5pevjgvpvepg6b6rqdhgq19.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1044655429742-cmtqil5u7mtcgui02bulghm6ptlbse6o.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.wephcoBrokerage"
+              }
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"
