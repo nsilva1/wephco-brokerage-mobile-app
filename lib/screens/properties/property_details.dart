@@ -216,6 +216,36 @@ late final Animation<double> _fadeAnimation = CurvedAnimation(
   }
 
   Widget _titleSection(Property property) {
+    final bool hasMap = property.googleMapLocation.trim().isNotEmpty;
+
+    final Widget locationRow = Row(
+      children: [
+        Icon(
+          Icons.location_on_rounded,
+          size: 14,
+          color: hasMap ? _lightGreen : _textMuted,
+        ),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            property.location,
+            style: TextStyle(
+              fontSize: 13,
+              color: hasMap ? _lightGreen : _textMuted,
+              fontWeight: hasMap ? FontWeight.w600 : FontWeight.w500,
+              decoration: hasMap ? TextDecoration.underline : null,
+              decorationColor: _lightGreen,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        if (hasMap) ...[
+          const SizedBox(width: 6),
+          const Icon(Icons.open_in_new_rounded, size: 13, color: _lightGreen),
+        ],
+      ],
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -230,25 +260,33 @@ late final Animation<double> _fadeAnimation = CurvedAnimation(
           ),
         ),
         const SizedBox(height: 6),
-        Row(
-          children: [
-            const Icon(Icons.location_on_rounded, size: 14, color: _textMuted),
-            const SizedBox(width: 4),
-            Expanded(
-              child: Text(
-                property.location,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: _textMuted,
-                  fontWeight: FontWeight.w500,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
+        if (hasMap)
+          InkWell(
+            onTap: () => _openMap(property),
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: locationRow,
             ),
-          ],
-        ),
+          )
+        else
+          locationRow,
       ],
     );
+  }
+
+  Future<void> _openMap(Property property) async {
+    final opened = await openMapLocation(property.googleMapLocation);
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Could not open the map for this property.'),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    }
   }
 
   Widget _tagsRow(Property property) {
@@ -363,6 +401,7 @@ late final Animation<double> _fadeAnimation = CurvedAnimation(
   }
 
   Widget _detailsGrid(Property property) {
+    final bool hasMap = property.googleMapLocation.trim().isNotEmpty;
     return Container(
       decoration: BoxDecoration(
         color: _cardBg,
@@ -387,8 +426,17 @@ late final Animation<double> _fadeAnimation = CurvedAnimation(
             Icons.location_city_rounded,
             'Category',
             property.category.isNotEmpty ? property.category : '—',
-            showDivider: property.pdfUrl.isNotEmpty,
+            showDivider: hasMap || property.pdfUrl.isNotEmpty,
           ),
+          if (hasMap)
+            _detailRow(
+              Icons.map_rounded,
+              'Map Location',
+              'View on Google Maps',
+              showDivider: property.pdfUrl.isNotEmpty,
+              valueColor: _lightGreen,
+              onTap: () => _openMap(property),
+            ),
           if (property.pdfUrl.isNotEmpty)
             _detailRow(
               Icons.picture_as_pdf_rounded,
@@ -408,51 +456,62 @@ late final Animation<double> _fadeAnimation = CurvedAnimation(
     String value, {
     bool showDivider = true,
     Color? valueColor,
+    VoidCallback? onTap,
   }) {
+    final Widget content = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F5E9),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: _brandGreen, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: _textMuted,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: valueColor ?? _textDark,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (onTap != null)
+            const Icon(Icons.north_east_rounded, size: 16, color: _lightGreen),
+        ],
+      ),
+    );
+
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: _brandGreen, size: 18),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: _textMuted,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      value,
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: valueColor ?? _textDark,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+        if (onTap == null)
+          content
+        else
+          InkWell(
+            onTap: onTap,
+            child: content,
           ),
-        ),
         if (showDivider)
           Divider(
             height: 1,
@@ -647,11 +706,15 @@ late final Animation<double> _fadeAnimation = CurvedAnimation(
           ? '\n✅ Highlights: ${property.interests.join(', ')}'
           : '';
 
+      final String mapLine = property.googleMapLocation.trim().isNotEmpty
+          ? '\n🗺️ View on map: ${property.googleMapLocation.trim()}'
+          : '';
+
       final String shareText = '''
 🏠 *PROPERTY LISTING*
 
 *${property.title}*
-📍 Location: ${property.location}
+📍 Location: ${property.location}$mapLine
 💰 Price: $price$yieldLine
 🏢 Developer: ${property.developer}$highlightsLine
 

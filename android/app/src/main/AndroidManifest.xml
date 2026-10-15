@@ -59,6 +59,14 @@
             <data android:scheme="mailto" />
         </intent>
     </queries>
+    <!-- Required so Google Maps links (https://maps.app.goo.gl/...) can be
+         handed off to the Maps app / browser on Android 11+. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
 </manifest>

@@ -39,6 +39,10 @@ class Property extends HiveObject {
   final bool verified;
   @HiveField(16)
   final List<String> interests;
+  /// Shareable Google Maps link for the property, e.g.
+  /// https://maps.app.goo.gl/gHfd2k4Mmwopij2V6 — empty when not provided.
+  @HiveField(17, defaultValue: '')
+  final String googleMapLocation;
 
   Property({
     this.id,
@@ -58,6 +62,7 @@ class Property extends HiveObject {
     required this.category,
     required this.verified,
     this.interests = const [],
+    this.googleMapLocation = '',
   });
 
   factory Property.fromMap(Map<String, dynamic> map, [String? docId]) {
@@ -83,6 +88,7 @@ class Property extends HiveObject {
         category: map['category'] ?? '',
         verified: map['verified'] ?? false,
         interests: List<String>.from(map['interests'] ?? []),
+        googleMapLocation: map['googleMapLocation'] ?? '',
     );
   }
 
@@ -104,6 +110,7 @@ class Property extends HiveObject {
     String? category,
     bool? verified,
     List<String>? interests,
+    String? googleMapLocation,
   }) {
     return Property(
       id: id ?? this.id,
@@ -123,6 +130,7 @@ class Property extends HiveObject {
       category: category ?? this.category,
       verified: verified ?? this.verified,
       interests: interests ?? this.interests,
+      googleMapLocation: googleMapLocation ?? this.googleMapLocation,
     );
   }
 }

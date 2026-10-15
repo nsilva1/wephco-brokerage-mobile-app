@@ -19,6 +19,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   final _titleController = TextEditingController();
   final _developerController = TextEditingController();
   final _locationController = TextEditingController();
+  final _googleMapLocationController = TextEditingController();
   final _priceController = TextEditingController();
   final _yieldController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -45,6 +46,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     _titleController.dispose();
     _developerController.dispose();
     _locationController.dispose();
+    _googleMapLocationController.dispose();
     _priceController.dispose();
     _yieldController.dispose();
     _descriptionController.dispose();
@@ -84,6 +86,18 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     }
   }
 
+  /// Optional field — only validated when the agent typed something.
+  String? _validateMapLink(String? value) {
+    final link = value?.trim() ?? '';
+    if (link.isEmpty) return null;
+
+    final uri = Uri.tryParse(link);
+    if (uri == null || !uri.hasAuthority || !uri.scheme.startsWith('http')) {
+      return "Enter a full link, e.g. https://maps.app.goo.gl/...";
+    }
+    return null;
+  }
+
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedImages.isEmpty) {
@@ -105,6 +119,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
         title: _titleController.text.trim(),
         developer: _developerController.text.trim(),
         location: _locationController.text.trim(),
+        googleMapLocation: _googleMapLocationController.text.trim(),
         price: double.parse(_priceController.text.trim()),
         yieldValue: _yieldController.text.trim().isNotEmpty
             ? double.tryParse(_yieldController.text.trim())
@@ -185,6 +200,21 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                   label: "Location",
                   icon: Icons.location_on_outlined,
                   validator: (v) => v!.isEmpty ? "Enter location" : null,
+                ),
+                const SizedBox(height: 16),
+                _textField(
+                  controller: _googleMapLocationController,
+                  label: "Google Maps Link (optional)",
+                  icon: Icons.map_outlined,
+                  keyboardType: TextInputType.url,
+                  validator: _validateMapLink,
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(left: 12, top: 6),
+                  child: Text(
+                    "Paste the share link from Google Maps, e.g. https://maps.app.goo.gl/gHfd2k4Mmwopij2V6",
+                    style: TextStyle(fontSize: 11, color: Colors.blueGrey),
+                  ),
                 ),
               ]),
               const SizedBox(height: 16),

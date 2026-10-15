@@ -34,13 +34,14 @@ class PropertyAdapter extends TypeAdapter<Property> {
       category: fields[14] as String,
       verified: fields[15] as bool,
       interests: (fields[16] as List).cast<String>(),
+      googleMapLocation: fields[17] == null ? '' : fields[17] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, Property obj) {
     writer
-      ..writeByte(17)
+      ..writeByte(18)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -74,7 +75,9 @@ class PropertyAdapter extends TypeAdapter<Property> {
       ..writeByte(15)
       ..write(obj.verified)
       ..writeByte(16)
-      ..write(obj.interests);
+      ..write(obj.interests)
+      ..writeByte(17)
+      ..write(obj.googleMapLocation);
   }
 
   @override

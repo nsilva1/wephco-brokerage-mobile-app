@@ -45,6 +45,31 @@ Future<void> sendEmail({
 }
 
 
+// Helper function to open a Google Maps link (e.g. https://maps.app.goo.gl/xxxx)
+// in the Maps app, falling back to the browser.
+// Returns true when the link was handed off successfully.
+Future<bool> openMapLocation(String mapUrl) async {
+  final String trimmed = mapUrl.trim();
+  if (trimmed.isEmpty) return false;
+
+  final Uri? mapUri = Uri.tryParse(
+    trimmed.startsWith('http') ? trimmed : 'https://$trimmed',
+  );
+  if (mapUri == null || !mapUri.hasAuthority) return false;
+
+  try {
+    // externalApplication lets Android/iOS hand the link to Google Maps
+    if (await launchUrl(mapUri, mode: LaunchMode.externalApplication)) {
+      return true;
+    }
+    // Some devices have no app registered for the link — try an in-app webview
+    return await launchUrl(mapUri, mode: LaunchMode.inAppBrowserView);
+  } catch (e) {
+    debugPrint('Error launching map location $trimmed: $e');
+    return false;
+  }
+}
+
 String formatCurrency(double amount, {bool compact = false, String currency = 'NGN'}) {
   String symbol = currency == 'USD' ? '\$' : '₦';
 
