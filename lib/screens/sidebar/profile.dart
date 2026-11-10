@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
+import '../../providers/property_provider.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -82,15 +83,33 @@ class ProfileScreen extends StatelessWidget {
               child: Column(
                 children: [
                   // — Stats Row —
-                  Row(
-                    children: [
-                      _statCard(context, "Active Leads", user?.activeLeads.toString() ?? '0', Icons.trending_up),
-                      const SizedBox(width: 12),
-                      _statCard(context, "Deals Closed", user?.dealsClosed.toString() ?? '0', Icons.handshake_outlined),
-                      const SizedBox(width: 12),
-                      _statCard(context, "Commission", '₦${user?.commission.toStringAsFixed(0) ?? '0'}', Icons.paid_outlined),
-                    ],
-                  ),
+                  if (user?.role == 'Developer')
+                    Builder(builder: (context) {
+                      final portfolio = context
+                          .watch<PropertyProvider>()
+                          .portfolio(user!.id);
+                      final views = portfolio.fold<int>(0, (s, p) => s + p.views);
+                      final stars = portfolio.fold<int>(0, (s, p) => s + p.interests.length);
+                      return Row(
+                        children: [
+                          _statCard(context, "Listings", '${portfolio.length}', Icons.home_work_outlined),
+                          const SizedBox(width: 12),
+                          _statCard(context, "Total Views", '$views', Icons.visibility_outlined),
+                          const SizedBox(width: 12),
+                          _statCard(context, "Total Stars", '$stars', Icons.bookmark_border_rounded),
+                        ],
+                      );
+                    })
+                  else
+                    Row(
+                      children: [
+                        _statCard(context, "Active Leads", user?.activeLeads.toString() ?? '0', Icons.trending_up),
+                        const SizedBox(width: 12),
+                        _statCard(context, "Deals Closed", user?.dealsClosed.toString() ?? '0', Icons.handshake_outlined),
+                        const SizedBox(width: 12),
+                        _statCard(context, "Commission", '₦${user?.commission.toStringAsFixed(0) ?? '0'}', Icons.paid_outlined),
+                      ],
+                    ),
                   const SizedBox(height: 20),
 
                   // — Account Info —

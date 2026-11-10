@@ -15,9 +15,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final List<String> _roles = ['Agent', 'Affiliate', 'Referral'];
+  final List<String> _roles = ['Agent', 'Developer'];
   final _phoneController = TextEditingController();
   String _selectedRole = 'Agent';
+  bool _obscurePassword = true;
 
   void _handleRegister() async {
     if (_formKey.currentState!.validate()) {
@@ -99,8 +100,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
               TextFormField(
                 controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: "Password", border: OutlineInputBorder()),
+                obscureText: _obscurePassword,
+                decoration: InputDecoration(
+                  labelText: "Password",
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    tooltip: _obscurePassword ? "Show password" : "Hide password",
+                    icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                  ),
+                ),
                 validator: (value) => value!.length < 6 ? "Min 6 characters" : null,
               ),
               

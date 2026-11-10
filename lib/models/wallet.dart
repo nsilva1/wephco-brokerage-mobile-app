@@ -22,9 +22,9 @@ class WalletInfo extends HiveObject {
 
   factory WalletInfo.fromMap(Map<String, dynamic> map) {
     return WalletInfo(
-      availableBalance: (map['availableBalance'] as num).toDouble(),
-      escrowBalance: (map['escrowBalance'] as num).toDouble(),
-      totalEarnings: (map['totalEarnings'] as num).toDouble(),
+      availableBalance: (map['availableBalance'] as num? ?? 0).toDouble(),
+      escrowBalance: (map['escrowBalance'] as num? ?? 0).toDouble(),
+      totalEarnings: (map['totalEarnings'] as num? ?? 0).toDouble(),
       currency: map['currency'] ?? 'USD',
     );
   }

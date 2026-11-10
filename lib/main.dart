@@ -48,6 +48,7 @@ import 'package:wephco_brokerage/screens/support/support_screen.dart';
 import 'package:wephco_brokerage/screens/support/faq.dart';
 import 'package:wephco_brokerage/screens/support/privacy_policy_screen.dart';
 import 'package:wephco_brokerage/screens/properties/add_property.dart';
+import 'package:wephco_brokerage/screens/developer/developer_layout.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -58,6 +59,8 @@ void main() async {
   // Register Adapters
   Hive.registerAdapter(LeadAdapter());
   Hive.registerAdapter(PropertyAdapter());
+  Hive.registerAdapter(PropertyAgentAdapter());
+  Hive.registerAdapter(PropertyUnitAdapter());
   Hive.registerAdapter(TransactionAdapter());
   Hive.registerAdapter(UserInfoAdapter());
   Hive.registerAdapter(WalletInfoAdapter());
@@ -99,6 +102,18 @@ void main() async {
   await NotificationService.instance.handleInitialMessage();
 }
 
+/// Sends developers to their portfolio app and everyone else to the agent app.
+class RoleHome extends StatelessWidget {
+  const RoleHome({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final role = context.select<UserProvider, String?>(
+        (provider) => provider.currentUser?.role);
+    return role == 'Developer' ? const DeveloperLayout() : const MainLayout();
+  }
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -121,7 +136,7 @@ class MyApp extends StatelessWidget {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
-        '/home': (context) => const AuthGuard(child: MainLayout()),
+        '/home': (context) => const AuthGuard(child: RoleHome()),
         '/leads': (context) => const AuthGuard(child: MainLayout(initialIndex: 1,)),
         '/properties': (context) => const AuthGuard(child: MainLayout(initialIndex: 2,)),
         '/wallet': (context) => const AuthGuard(child: MainLayout(initialIndex: 3,)),

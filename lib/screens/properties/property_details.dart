@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:wephco_brokerage/providers/property_provider.dart';
+import 'package:wephco_brokerage/providers/user_provider.dart';
 import 'package:provider/provider.dart';
 import '../../utils/helper_functions.dart';
 import '../../models/property.dart';
@@ -45,6 +46,11 @@ late final Animation<double> _fadeAnimation = CurvedAnimation(
     super.initState();
     _id = widget.propertyId;
     _fadeController.forward();
+
+    final viewerId = context.read<UserProvider>().currentUser?.id ?? '';
+    context
+        .read<PropertyProvider>()
+        .recordView(propertyId: _id, viewerId: viewerId);
   }
 
   @override
@@ -112,8 +118,20 @@ late final Animation<double> _fadeAnimation = CurvedAnimation(
                         _tagsRow(property),
                         const SizedBox(height: 20),
                         _priceCard(property),
+                        if (_hasKeyFacts(property)) ...[
+                          const SizedBox(height: 16),
+                          _keyFactsRow(property),
+                        ],
                         const SizedBox(height: 16),
                         _detailsGrid(property),
+                        if (property.units.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          _unitsCard(property),
+                        ],
+                        if (property.agent != null) ...[
+                          const SizedBox(height: 16),
+                          _agentCard(property.agent!),
+                        ],
                         if (property.interests.isNotEmpty) ...[
                           const SizedBox(height: 16),
                           _interestsSection(property),
@@ -294,6 +312,8 @@ late final Animation<double> _fadeAnimation = CurvedAnimation(
       spacing: 8,
       runSpacing: 8,
       children: [
+        if (property.featured)
+          _tag('★ Featured', _accentGold, Colors.white),
         _tag(property.status, _brandGreen, Colors.white),
         if (property.tag.isNotEmpty)
           _tag(property.tag, const Color(0xFFF0F4FF), const Color(0xFF3B5BDB)),
@@ -394,6 +414,173 @@ late final Animation<double> _fadeAnimation = CurvedAnimation(
                   ),
                 ),
               ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  bool _hasKeyFacts(Property property) =>
+      property.bedroom.isNotEmpty ||
+      property.bathroom.isNotEmpty ||
+      property.squareFoot.isNotEmpty;
+
+  /// ['2', '3', '4'] → "2 – 4", ['3'] → "3"
+  String _formatRange(List<String> values) {
+    if (values.isEmpty) return '—';
+    if (values.length == 1) return values.first;
+    return '${values.first} – ${values.last}';
+  }
+
+  BoxDecoration get _cardDecoration => BoxDecoration(
+        color: _cardBg,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      );
+
+  Widget _keyFactsRow(Property property) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: _cardDecoration,
+      child: Row(
+        children: [
+          _keyFact(Icons.bed_rounded, _formatRange(property.bedroom), 'Beds'),
+          _keyFactDivider(),
+          _keyFact(
+              Icons.bathtub_rounded, _formatRange(property.bathroom), 'Baths'),
+          _keyFactDivider(),
+          _keyFact(Icons.square_foot_rounded,
+              _formatRange(property.squareFoot), 'Sq ft'),
+        ],
+      ),
+    );
+  }
+
+  Widget _keyFact(IconData icon, String value, String label) {
+    return Expanded(
+      child: Column(
+        children: [
+          Icon(icon, color: _brandGreen, size: 22),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: _textDark,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              color: _textMuted,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _keyFactDivider() =>
+      Container(width: 1, height: 40, color: Colors.grey.shade200);
+
+  Widget _unitsCard(Property property) {
+    const headerStyle = TextStyle(
+      fontSize: 11,
+      color: _textMuted,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.5,
+    );
+    const cellStyle = TextStyle(
+      fontSize: 14,
+      color: _textDark,
+      fontWeight: FontWeight.w600,
+    );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: _cardDecoration,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'AVAILABLE UNITS',
+            style: TextStyle(
+              fontSize: 11,
+              color: _textMuted,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Row(
+            children: [
+              Expanded(child: Text('BEDS', style: headerStyle)),
+              Expanded(child: Text('BATHS', style: headerStyle)),
+              Expanded(child: Text('SQ FT', style: headerStyle)),
+            ],
+          ),
+          for (final unit in property.units) ...[
+            Divider(height: 20, color: Colors.grey.shade100),
+            Row(
+              children: [
+                Expanded(
+                    child: Text(unit.bedroom.isEmpty ? '—' : unit.bedroom,
+                        style: cellStyle)),
+                Expanded(
+                    child: Text(unit.bathroom.isEmpty ? '—' : unit.bathroom,
+                        style: cellStyle)),
+                Expanded(
+                    child: Text(
+                        unit.squareFoot.isEmpty ? '—' : unit.squareFoot,
+                        style: cellStyle)),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _agentCard(PropertyAgent agent) {
+    return Container(
+      decoration: _cardDecoration,
+      child: Column(
+        children: [
+          _detailRow(
+            Icons.person_rounded,
+            'Listing Agent',
+            agent.name.isNotEmpty ? agent.name : '—',
+            showDivider: agent.phone.isNotEmpty || agent.email.isNotEmpty,
+          ),
+          if (agent.phone.isNotEmpty)
+            _detailRow(
+              Icons.phone_rounded,
+              'Phone',
+              agent.phone,
+              showDivider: agent.email.isNotEmpty,
+              valueColor: _lightGreen,
+              onTap: () => callPhone(agent.phone).catchError((_) {}),
+            ),
+          if (agent.email.isNotEmpty)
+            _detailRow(
+              Icons.email_rounded,
+              'Email',
+              agent.email,
+              showDivider: false,
+              valueColor: _lightGreen,
+              onTap: () => sendEmail(toEmail: agent.email),
             ),
         ],
       ),
@@ -710,12 +897,23 @@ late final Animation<double> _fadeAnimation = CurvedAnimation(
           ? '\n🗺️ View on map: ${property.googleMapLocation.trim()}'
           : '';
 
+      final List<String> facts = [
+        if (property.bedroom.isNotEmpty)
+          '${_formatRange(property.bedroom)} bed',
+        if (property.bathroom.isNotEmpty)
+          '${_formatRange(property.bathroom)} bath',
+        if (property.squareFoot.isNotEmpty)
+          '${_formatRange(property.squareFoot)} sq ft',
+      ];
+      final String factsLine =
+          facts.isNotEmpty ? '\n🛏️ ${facts.join(' · ')}' : '';
+
       final String shareText = '''
 🏠 *PROPERTY LISTING*
 
 *${property.title}*
 📍 Location: ${property.location}$mapLine
-💰 Price: $price$yieldLine
+💰 Price: $price$yieldLine$factsLine
 🏢 Developer: ${property.developer}$highlightsLine
 
 *Description:*

@@ -245,9 +245,10 @@ class _MainLayoutState extends State<MainLayout>
   }
 }
 
-void logout(BuildContext context) {
+Future<void> logout(BuildContext context) async {
   // Clear user data from provider
-  context.read<UserProvider>().logout;
+  await context.read<UserProvider>().logout();
+  if (!context.mounted) return;
 
   // Navigate to login screen
   Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);

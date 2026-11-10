@@ -5,10 +5,39 @@ import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../providers/property_provider.dart';
+import '../../providers/user_provider.dart';
 import '../../models/property.dart';
 
+/// Text controllers for one row in the "Units" section.
+class _UnitControllers {
+  final bedroom = TextEditingController();
+  final bathroom = TextEditingController();
+  final squareFoot = TextEditingController();
+
+  bool get isEmpty =>
+      bedroom.text.trim().isEmpty &&
+      bathroom.text.trim().isEmpty &&
+      squareFoot.text.trim().isEmpty;
+
+  PropertyUnit toUnit() => PropertyUnit(
+        bedroom: bedroom.text.trim(),
+        bathroom: bathroom.text.trim(),
+        squareFoot: squareFoot.text.trim(),
+      );
+
+  void dispose() {
+    bedroom.dispose();
+    bathroom.dispose();
+    squareFoot.dispose();
+  }
+}
+
+/// Adds a new property, or edits [property] when one is passed in
+/// (developers editing their own listings).
 class AddPropertyScreen extends StatefulWidget {
-  const AddPropertyScreen({super.key});
+  final Property? property;
+
+  const AddPropertyScreen({super.key, this.property});
 
   @override
   State<AddPropertyScreen> createState() => _AddPropertyScreenState();
@@ -23,16 +52,30 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   final _priceController = TextEditingController();
   final _yieldController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _bedroomController = TextEditingController();
+  final _bathroomController = TextEditingController();
+  final _squareFootController = TextEditingController();
+  final _agentNameController = TextEditingController();
+  final _agentEmailController = TextEditingController();
+  final _agentPhoneController = TextEditingController();
+  final List<_UnitControllers> _units = [];
 
   String _selectedStatus = 'Available';
   String _selectedCurrency = 'NGN';
   String _selectedTag = 'Local';
   String _selectedCategory = 'Sale';
 
-  // Multi-image support
+  // Multi-image support. When editing, already-uploaded images come first.
+  final List<String> _existingImageUrls = [];
   final List<File> _selectedImages = [];
 
+  int get _imageCount => _existingImageUrls.length + _selectedImages.length;
+
+  /// Brochure already on the listing being edited; cleared to remove it.
+  String _existingPdfUrl = '';
   File? _selectedPdf;
+
+  bool get _hasPdf => _selectedPdf != null || _existingPdfUrl.isNotEmpty;
   String? _selectedPdfName;
   bool _isSubmitting = false;
 
@@ -40,6 +83,35 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   static const List<String> _currencies = ['NGN', 'USD'];
   static const List<String> _tags = ['Local', 'International'];
   static const List<String> _categories = ['Rent', 'Lease', 'Sale'];
+
+  /// Set when a Developer account is listing its own property.
+  String _developerId = '';
+
+  bool get _isEditing => widget.property != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final existing = widget.property;
+    if (existing != null) {
+      _prefill(existing);
+      return;
+    }
+
+    final user = context.read<UserProvider>().currentUser;
+    if (user == null) return;
+
+    if (user.role == 'Developer') {
+      // Ties the listing to the developer's portfolio.
+      _developerId = user.id;
+      _developerController.text = user.name;
+    } else {
+      // The agent listing the property is usually the logged-in user.
+      _agentNameController.text = user.name;
+      _agentEmailController.text = user.email;
+      _agentPhoneController.text = user.phone;
+    }
+  }
 
   @override
   void dispose() {
@@ -50,7 +122,92 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     _priceController.dispose();
     _yieldController.dispose();
     _descriptionController.dispose();
+    _bedroomController.dispose();
+    _bathroomController.dispose();
+    _squareFootController.dispose();
+    _agentNameController.dispose();
+    _agentEmailController.dispose();
+    _agentPhoneController.dispose();
+    for (final unit in _units) {
+      unit.dispose();
+    }
     super.dispose();
+  }
+
+  void _prefill(Property p) {
+    _developerId = p.developerId;
+    _titleController.text = p.title;
+    _developerController.text = p.developer;
+    _locationController.text = p.location;
+    _googleMapLocationController.text = p.googleMapLocation;
+    _priceController.text = _formatNumber(p.price);
+    _yieldController.text =
+        p.yieldValue == null ? '' : _formatNumber(p.yieldValue!);
+    _descriptionController.text = p.description;
+    _bedroomController.text = p.bedroom.join(', ');
+    _bathroomController.text = p.bathroom.join(', ');
+    _squareFootController.text = p.squareFoot.join(', ');
+    _agentNameController.text = p.agent?.name ?? '';
+    _agentEmailController.text = p.agent?.email ?? '';
+    _agentPhoneController.text = p.agent?.phone ?? '';
+    for (final unit in p.units) {
+      _units.add(_UnitControllers()
+        ..bedroom.text = unit.bedroom
+        ..bathroom.text = unit.bathroom
+        ..squareFoot.text = unit.squareFoot);
+    }
+
+    // The web dashboard can store values like 'available', so match loosely
+    // — a dropdown value missing from its items would throw.
+    _selectedStatus = _matchOption(p.status, _statuses, _selectedStatus);
+    _selectedCurrency = _matchOption(p.currency, _currencies, _selectedCurrency);
+    _selectedTag = _matchOption(p.tag, _tags, _selectedTag);
+    _selectedCategory = _matchOption(p.category, _categories, _selectedCategory);
+
+    _existingImageUrls.addAll(p.images);
+    _existingPdfUrl = p.pdfUrl;
+  }
+
+  String _matchOption(String value, List<String> options, String fallback) {
+    return options.firstWhere(
+      (o) => o.toLowerCase() == value.trim().toLowerCase(),
+      orElse: () => fallback,
+    );
+  }
+
+  /// 2500000.0 → "2500000", 7.5 → "7.5" (fits the price input formatter).
+  String _formatNumber(double value) => value == value.roundToDouble()
+      ? value.toStringAsFixed(0)
+      : value.toStringAsFixed(2).replaceFirst(RegExp(r'0$'), '');
+
+  void _addUnit() => setState(() => _units.add(_UnitControllers()));
+
+  void _removeUnit(int index) {
+    setState(() => _units.removeAt(index).dispose());
+  }
+
+  /// "2, 3, 4" → ['2', '3', '4']
+  List<String> _splitValues(TextEditingController controller) => controller
+      .text
+      .split(',')
+      .map((v) => v.trim())
+      .where((v) => v.isNotEmpty)
+      .toList();
+
+  PropertyAgent? _buildAgent() {
+    final name = _agentNameController.text.trim();
+    final email = _agentEmailController.text.trim();
+    final phone = _agentPhoneController.text.trim();
+    if (name.isEmpty && email.isEmpty && phone.isEmpty) return null;
+    return PropertyAgent(name: name, email: email, phone: phone);
+  }
+
+  String? _validateEmail(String? value) {
+    final email = value?.trim() ?? '';
+    if (email.isEmpty) return null;
+    return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)
+        ? null
+        : "Enter a valid email";
   }
 
   Future<void> _pickImages() async {
@@ -69,8 +226,15 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     }
   }
 
+  /// [index] runs across existing images first, then newly picked files.
   void _removeImage(int index) {
-    setState(() => _selectedImages.removeAt(index));
+    setState(() {
+      if (index < _existingImageUrls.length) {
+        _existingImageUrls.removeAt(index);
+      } else {
+        _selectedImages.removeAt(index - _existingImageUrls.length);
+      }
+    });
   }
 
   Future<void> _pickPdf() async {
@@ -100,7 +264,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
 
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedImages.isEmpty) {
+    if (_imageCount == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Please select at least one property image."),
@@ -112,28 +276,51 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
 
     setState(() => _isSubmitting = true);
 
-    final error = await context.read<PropertyProvider>().addProperty(
-      imageFiles: _selectedImages,
-      pdfFile: _selectedPdf,
-      property: Property(
-        title: _titleController.text.trim(),
-        developer: _developerController.text.trim(),
-        location: _locationController.text.trim(),
-        googleMapLocation: _googleMapLocationController.text.trim(),
-        price: double.parse(_priceController.text.trim()),
-        yieldValue: _yieldController.text.trim().isNotEmpty
-            ? double.tryParse(_yieldController.text.trim())
-            : null,
-        status: _selectedStatus,
-        description: _descriptionController.text.trim(),
-        images: const [],  // provider fills these after upload
-        currency: _selectedCurrency,
-        tag: _selectedTag,
-        pdfUrl: '',
-        category: _selectedCategory,
-        verified: false,
-      ),
+    final provider = context.read<PropertyProvider>();
+    final currentUserId = context.read<UserProvider>().currentUser?.id ?? '';
+    final property = Property(
+      id: widget.property?.id,
+      title: _titleController.text.trim(),
+      developer: _developerController.text.trim(),
+      location: _locationController.text.trim(),
+      googleMapLocation: _googleMapLocationController.text.trim(),
+      price: double.parse(_priceController.text.trim()),
+      yieldValue: _yieldController.text.trim().isNotEmpty
+          ? double.tryParse(_yieldController.text.trim())
+          : null,
+      status: _selectedStatus,
+      description: _descriptionController.text.trim(),
+      images: const [], // provider fills these after upload
+      currency: _selectedCurrency,
+      tag: _selectedTag,
+      pdfUrl: '',
+      category: _selectedCategory,
+      verified: false, // provider keeps the stored value when editing
+      bedroom: _splitValues(_bedroomController),
+      bathroom: _splitValues(_bathroomController),
+      squareFoot: _splitValues(_squareFootController),
+      units: _units
+          .where((u) => !u.isEmpty)
+          .map((u) => u.toUnit())
+          .toList(),
+      agent: _buildAgent(),
+      developerId: _developerId,
     );
+
+    final error = _isEditing
+        ? await provider.updateProperty(
+            property: property,
+            developerId: currentUserId,
+            keptImageUrls: _existingImageUrls,
+            newImageFiles: _selectedImages,
+            newPdfFile: _selectedPdf,
+            removePdf: _existingPdfUrl.isEmpty && _selectedPdf == null,
+          )
+        : await provider.addProperty(
+            imageFiles: _selectedImages,
+            pdfFile: _selectedPdf,
+            property: property,
+          );
 
     if (!mounted) return;
     setState(() => _isSubmitting = false);
@@ -144,8 +331,12 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Property added successfully."),
+        SnackBar(
+          content: Text(_isEditing
+              ? "Changes saved."
+              : _developerId.isNotEmpty
+                  ? "Property submitted. It will go live once the Wephco team approves it."
+                  : "Property added successfully."),
           backgroundColor: Colors.green,
         ),
       );
@@ -158,8 +349,8 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text("Add Property",
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(_isEditing ? "Edit Property" : "Add Property",
+            style: const TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
@@ -300,6 +491,85 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
               ]),
               const SizedBox(height: 16),
 
+              // ── Property Details ─────────────────────────────────────────
+              _sectionLabel("Property Details (Optional)"),
+              _card(children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: _textField(
+                        controller: _bedroomController,
+                        label: "Bedrooms",
+                        icon: Icons.bed_outlined,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _textField(
+                        controller: _bathroomController,
+                        label: "Bathrooms",
+                        icon: Icons.bathtub_outlined,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _textField(
+                  controller: _squareFootController,
+                  label: "Size (sq ft)",
+                  icon: Icons.square_foot_outlined,
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(left: 12, top: 6),
+                  child: Text(
+                    "Separate multiple options with commas, e.g. 2, 3, 4",
+                    style: TextStyle(fontSize: 11, color: Colors.blueGrey),
+                  ),
+                ),
+              ]),
+              const SizedBox(height: 16),
+
+              // ── Units ────────────────────────────────────────────────────
+              _sectionLabel("Units (Optional)"),
+              _card(children: [
+                for (var i = 0; i < _units.length; i++) ...[
+                  _unitRow(i),
+                  const SizedBox(height: 12),
+                ],
+                TextButton.icon(
+                  onPressed: _addUnit,
+                  icon: const Icon(Icons.add, size: 18),
+                  label: Text(_units.isEmpty ? "Add unit type" : "Add another unit"),
+                ),
+              ]),
+              const SizedBox(height: 16),
+
+              // ── Listing Agent ────────────────────────────────────────────
+              _sectionLabel("Listing Agent (Optional)"),
+              _card(children: [
+                _textField(
+                  controller: _agentNameController,
+                  label: "Agent Name",
+                  icon: Icons.person_outline,
+                ),
+                const SizedBox(height: 16),
+                _textField(
+                  controller: _agentEmailController,
+                  label: "Agent Email",
+                  icon: Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: _validateEmail,
+                ),
+                const SizedBox(height: 16),
+                _textField(
+                  controller: _agentPhoneController,
+                  label: "Agent Phone",
+                  icon: Icons.phone_outlined,
+                  keyboardType: TextInputType.phone,
+                ),
+              ]),
+              const SizedBox(height: 16),
+
               // ── Description ──────────────────────────────────────────────
               _sectionLabel("Description"),
               _card(children: [
@@ -325,10 +595,10 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: _selectedPdf != null
+                        color: _hasPdf
                             ? Theme.of(context).primaryColor
                             : Colors.grey[200]!,
-                        width: _selectedPdf != null ? 2 : 1.5,
+                        width: _hasPdf ? 2 : 1.5,
                       ),
                       color: const Color(0xFFF8FAFC),
                     ),
@@ -336,7 +606,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                       children: [
                         Icon(
                           Icons.picture_as_pdf_outlined,
-                          color: _selectedPdf != null
+                          color: _hasPdf
                               ? Theme.of(context).primaryColor
                               : Colors.blueGrey,
                           size: 22,
@@ -345,24 +615,27 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                         Expanded(
                           child: Text(
                             _selectedPdfName ??
-                                "Tap to select brochure PDF",
+                                (_existingPdfUrl.isNotEmpty
+                                    ? "Current brochure (tap to replace)"
+                                    : "Tap to select brochure PDF"),
                             style: TextStyle(
-                              color: _selectedPdf != null
+                              color: _hasPdf
                                   ? const Color(0xFF1A1C1E)
                                   : Colors.grey[500],
                               fontSize: 14,
-                              fontWeight: _selectedPdf != null
+                              fontWeight: _hasPdf
                                   ? FontWeight.w600
                                   : FontWeight.normal,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (_selectedPdf != null)
+                        if (_hasPdf)
                           GestureDetector(
                             onTap: () => setState(() {
                               _selectedPdf = null;
                               _selectedPdfName = null;
+                              _existingPdfUrl = '';
                             }),
                             child: const Icon(Icons.close,
                                 size: 18, color: Colors.blueGrey),
@@ -400,9 +673,9 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                             strokeWidth: 2,
                           ),
                         )
-                      : const Text(
-                          "Add Property",
-                          style: TextStyle(
+                      : Text(
+                          _isEditing ? "Save Changes" : "Add Property",
+                          style: const TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                 ),
@@ -421,15 +694,15 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Thumbnail row
-        if (_selectedImages.isNotEmpty)
+        if (_imageCount > 0)
           SizedBox(
             height: 110,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: _selectedImages.length + 1, // +1 for "add more" tile
+              itemCount: _imageCount + 1, // +1 for "add more" tile
               separatorBuilder: (_, __) => const SizedBox(width: 10),
               itemBuilder: (context, index) {
-                if (index == _selectedImages.length) {
+                if (index == _imageCount) {
                   return _addMoreTile();
                 }
                 return _imageThumbnail(index);
@@ -470,10 +743,10 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
               ),
             ),
           ),
-        if (_selectedImages.isNotEmpty) ...[
+        if (_imageCount > 0) ...[
           const SizedBox(height: 8),
           Text(
-            "${_selectedImages.length} image${_selectedImages.length == 1 ? '' : 's'} selected  •  Tap × to remove",
+            "$_imageCount image${_imageCount == 1 ? '' : 's'} selected  •  Tap × to remove",
             style: TextStyle(color: Colors.grey[500], fontSize: 12),
           ),
         ],
@@ -486,12 +759,26 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(12),
-          child: Image.file(
-            _selectedImages[index],
-            width: 110,
-            height: 110,
-            fit: BoxFit.cover,
-          ),
+          child: index < _existingImageUrls.length
+              ? Image.network(
+                  _existingImageUrls[index],
+                  width: 110,
+                  height: 110,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => Container(
+                    width: 110,
+                    height: 110,
+                    color: Colors.grey[200],
+                    child: const Icon(Icons.image_not_supported,
+                        color: Colors.grey),
+                  ),
+                )
+              : Image.file(
+                  _selectedImages[index - _existingImageUrls.length],
+                  width: 110,
+                  height: 110,
+                  fit: BoxFit.cover,
+                ),
         ),
         Positioned(
           top: 4,
@@ -558,6 +845,44 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _unitRow(int index) {
+    final unit = _units[index];
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: _textField(
+            controller: unit.bedroom,
+            label: "Beds",
+            icon: Icons.bed_outlined,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _textField(
+            controller: unit.bathroom,
+            label: "Baths",
+            icon: Icons.bathtub_outlined,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _textField(
+            controller: unit.squareFoot,
+            label: "Sq ft",
+            icon: Icons.square_foot_outlined,
+          ),
+        ),
+        IconButton(
+          tooltip: "Remove unit",
+          onPressed: () => _removeUnit(index),
+          icon: const Icon(Icons.remove_circle_outline,
+              color: Colors.redAccent),
+        ),
+      ],
     );
   }
 
